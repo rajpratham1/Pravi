@@ -1,0 +1,11 @@
+{
+  "name": "pravi-marketplace",
+  "version": "1.0.0",
+  "description": "Pravi Marketplace Frontend",
+  "main": "app.js",
+  "scripts": {
+    "build": "node generate-config.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
