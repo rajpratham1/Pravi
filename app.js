@@ -17,9 +17,12 @@ let currentUser = {
     name: null
 };
 
+// The 'firebaseConfig' object is loaded from 'firebase-config.js'
+// which should be generated during the Vercel build process.
 try {
-    if (!firebaseConfig.apiKey) {
-        throw new Error('Invalid Firebase configuration. Please paste your project config into app.js.');
+    // Check if firebaseConfig is defined and has the necessary properties.
+    if (typeof firebaseConfig === 'undefined' || !firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
+         throw new Error('Firebase configuration is missing or invalid. Check that environment variables are set correctly in Vercel.');
     }
     app = firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
@@ -28,7 +31,8 @@ try {
     console.log('Firebase initialized successfully');
 } catch (error) {
     console.error('Firebase initialization error:', error);
-    document.body.innerHTML = `<div class="container" style="padding: 2rem;"><div class="error-message" style="display:block;"><h3>Firebase Config Error</h3><p>${error.message}</p><p>Please follow the setup instructions in <strong>README.md</strong> to configure your Firebase project and paste the config object into <strong>app.js</strong>.</p></div></div>`;
+    // Display a user-friendly error message on the page.
+    document.body.innerHTML = `<div class="container" style="padding: 2rem;"><div class="error-message" style="display:block;"><h3>Firebase Config Error</h3><p>${error.message}</p><p>This site is not configured correctly. Please contact the administrator.</p></div></div>`;
 }
 
 // ============================================================
