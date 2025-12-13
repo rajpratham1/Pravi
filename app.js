@@ -27,7 +27,7 @@ try {
 
     // Deeper validation for the databaseURL format, which is a common deployment issue.
     if (typeof firebaseConfig.databaseURL !== 'string' || !firebaseConfig.databaseURL.startsWith('https://') || !firebaseConfig.databaseURL.endsWith('.firebaseio.com')) {
-        throw new Error(`Invalid Firebase databaseURL format. It should be a full URL like "https://your-project-id.firebaseio.com". Please check the 'PUBLIC_FIREBASE_DATABASE_URL' environment variable in your Vercel project settings.`);
+        throw new Error(`Invalid Firebase databaseURL format. The provided URL was "${firebaseConfig.databaseURL}". It should be a full URL like "https://your-project-id.firebaseio.com". Please check the 'PUBLIC_FIREBASE_DATABASE_URL' environment variable in your Vercel project settings.`);
     }
 
     app = firebase.initializeApp(firebaseConfig);
