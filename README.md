@@ -86,11 +86,6 @@ The process to become a seller is in two parts: Application and Registration.
 
 The Administrator manages the entire platform.
 
-### 3.1. Admin Login
-1.  Go to the **Login** page.
-2.  Select the **"Developer"** tab.
-3.  **Developer ID**: `master-dev@pravi.internal`
-4.  **Password**: `Pravi@1222`
 
 *Note: The first time you use these credentials, the Admin account will be automatically created in the database.*
 
