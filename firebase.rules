@@ -1,0 +1,103 @@
+// -----------------------------------------------------------------
+// Firebase Realtime Database Rules
+// -----------------------------------------------------------------
+// Instructions:
+// 1. Go to your Firebase Console -> Realtime Database -> Rules tab.
+// 2. Copy the JSON object below and paste it into the editor, replacing existing rules.
+// 3. Click "Publish".
+// -----------------------------------------------------------------
+
+{
+  "rules": {
+    // Users can read/write their own data. Admin has full read access.
+    "users": {
+      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": ["role"],
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".validate": "newData.hasChildren(['role', 'email', 'createdAt'])"
+      }
+    },
+    
+    // Application submission rules
+    "applications": {
+      // Admins can read the list of applications
+      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": ["status"],
+      "$appId": {
+        // Allow write if creating a new application, OR if an admin is updating an existing one.
+        ".write": "(!data.exists() && newData.exists()) || (data.exists() && root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        // Admins can read individual applications
+        ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".validate": "newData.hasChildren(['name', 'email', 'phone', 'aadhaarURL', 'panURL', 'status', 'appliedAt'])"
+      }
+    },
+
+    // This path is used to prevent duplicate seller applications from the same email.
+    "applicantEmails": {
+       "$encodedEmail": {
+          // Allow anyone to write a new email record, but only if it doesn't already exist.
+          ".write": "!data.exists() && newData.exists()",
+          // No one can read the list of applicant emails.
+          ".read": false
+       }
+    },
+
+    // Listings are public. Only the owner developer or an admin can create/update/delete.
+    "listings": {
+      ".read": true,
+      ".indexOn": ["userId"],
+      "$listingId": {
+        ".write": "((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".validate": "newData.hasChildren(['title', 'description', 'price', 'websiteURL', 'userId', 'createdAt'])"
+      }
+    },
+    
+    // Inquiries can be created by authenticated users.
+    "inquiries": {
+      ".indexOn": ["buyerId", "sellerId"],
+      "$inquiryId": {
+        ".read": "data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "auth != null && newData.child('buyerId').val() === auth.uid",
+        ".validate": "newData.hasChildren(['listingId', 'listingTitle', 'sellerId', 'buyerId', 'message', 'createdAt'])"
+      }
+    }
+  }
+}
+
+
+// -----------------------------------------------------------------
+// Firebase Storage Rules
+// -----------------------------------------------------------------
+// Instructions:
+// 1. Go to your Firebase Console -> Storage -> Rules tab.
+// 2. Copy the rules below and paste them into the editor.
+// 3. Click "Publish".
+// -----------------------------------------------------------------
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+  
+    // Application documents (Aadhaar/PAN)
+    match /applications/{fileName} {
+      // Any authenticated user can upload a document (for their application).
+      // We enforce a 5MB size limit here on the server side for security.
+      allow write: if request.auth != null && request.resource.size < 5 * 1024 * 1024;
+      
+      // IMPORTANT: Only an admin can read the uploaded documents.
+      allow read: if request.auth != null && root.child('users').child(request.auth.uid).child('role').val() == 'admin';
+    }
+
+    // Listing images
+    match /listings/{fileName} {
+      // Listing images are public and can be read by anyone.
+      allow read: true;
+      
+      // Any authenticated user can upload a listing image.
+      // We also enforce a 5MB size limit here.
+      allow write: if request.auth != null && request.resource.size < 5 * 1024 * 1024;
+    }
+  }
+}

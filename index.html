@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pravi - Marketplace for Ready Websites</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header id="main-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="favicon.svg" alt="Pravi Logo" class="logo-img">
+                    <span>Pravi</span>
+                </div>
+                <nav id="main-nav">
+                    <a href="#" onclick="showPage('home')">Home</a>
+                    <a href="#" onclick="showPage('listings')">Browse Websites</a>
+                    <div class="theme-switch-wrapper">
+                        <label class="theme-switch" for="theme-checkbox">
+                            <input type="checkbox" id="theme-checkbox" />
+                            <div class="slider round"></div>
+                        </label>
+                    </div>
+                    <span id="auth-links">
+                        <a href="#" onclick="showPage('login')" class="btn-secondary">Login</a>
+                        <a href="#" onclick="showPage('signup')" class="btn-primary">Sign Up</a>
+                    </span>
+                    <span id="user-menu" style="display:none;">
+                        <a href="#" onclick="showPage('cart')" class="cart-icon-wrapper">
+                            <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                            <span id="cart-item-count">0</span>
+                        </a>
+                        <span id="username-display"></span>
+                        <a href="#" onclick="showPage('dashboard')">My Dashboard</a>
+                        <a href="#" onclick="logout()">Logout</a>
+                    </span>
+                </nav>
+                <button id="mobile-menu-btn" class="mobile-menu-btn">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Home Page -->
+        <div id="page-home" class="page active">
+            <section class="hero">
+                <div class="container">
+                    <h2>The Premier Marketplace for Ready-Made Websites</h2>
+                    <p>Launch your next project in minutes, not months. Buy and sell professional, ready-to-launch websites.</p>
+                    <div class="cta-buttons">
+                        <a href="#" onclick="showPage('listings')" class="btn-primary">Browse Websites Now</a>
+                        <a href="#" onclick="showPage('seller-apply')" class="btn-secondary">Become a Seller</a>
+                    </div>
+                </div>
+            </section>
+
+
+
+            <section class="how-it-works">
+                <div class="container">
+                    <h2 class="section-title">How It Works</h2>
+                    <div class="how-it-works-grid">
+                        <div class="how-card reveal-on-scroll">
+                            <div class="how-icon">🛒</div>
+                            <h3>For Buyers (Users)</h3>
+                            <p>Browse a curated selection of ready-made websites. View live demos and purchase your new site with confidence.</p>
+                            <a href="#" onclick="showPage('listings')" class="text-link">Start Browsing &rarr;</a>
+                        </div>
+                        <div class="how-card reveal-on-scroll">
+                            <div class="how-icon">💻</div>
+                            <h3>For Sellers</h3>
+                            <p>Get verified, list your web projects, and reach a wide audience. Manage listings and inquiries in one place.</p>
+                            <a href="#" onclick="showPage('seller-apply')" class="text-link">Start Selling &rarr;</a>
+                        </div>
+                        <div class="how-card reveal-on-scroll">
+                            <div class="how-icon">🛡️</div>
+                            <h3>For the Developer</h3>
+                            <p>The master developer manages the platform, approves sellers, and ensures the quality of the marketplace.</p>
+                            <a href="#" onclick="switchLoginTab('developer'); showPage('login');" class="text-link">Developer Login &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="latest-listings">
+                <div class="container">
+                    <h2 class="section-title">Latest Listings</h2>
+                    <div id="home-listings" class="listings-grid">
+                        <p class="loading">Loading listings...</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Listings Page -->
+        <div id="page-listings" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>All Websites</h2>
+                    <div class="filters">
+                        <input type="text" id="search-input" placeholder="Search for websites..." onkeyup="filterListings()">
+                        <select id="sort-select" onchange="filterListings()">
+                            <option value="newest">Sort by: Newest</option>
+                            <option value="price-low">Sort by: Price Low to High</option>
+                            <option value="price-high">Sort by: Price High to Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="all-listings" class="listings-grid">
+                    <p class="loading">Loading listings...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listing Detail Page -->
+        <div id="page-listing-detail" class="page">
+            <div class="container" id="listing-detail-content">
+                <p class="loading">Loading listing details...</p>
+            </div>
+        </div>
+
+        <!-- Cart Page -->
+        <div id="page-cart" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>My Cart</h2>
+                </div>
+                <div id="cart-items-container">
+                    <!-- Cart items will be rendered here by JS -->
+                    <p class="loading">Your cart is empty.</p>
+                </div>
+                <div class="cart-summary">
+                    <div class="price-details">
+                        <div class="price-row total-row">
+                            <span>Total</span>
+                            <span id="cart-total">₹0</span>
+                        </div>
+                    </div>
+                    <button class="btn-primary btn-large" onclick="goToCheckout()">Proceed to Checkout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="page-login" class="page">
+            <div class="container">
+                <div class="auth-form">
+                    <h2>Login to Your Account</h2>
+                    <div class="form-tabs">
+                        <button class="tab active" onclick="switchLoginTab('user')">User</button>
+                        <button class="tab" onclick="switchLoginTab('seller')">Seller</button>
+                        <button class="tab" onclick="switchLoginTab('developer')">Developer</button>
+                    </div>
+                    <form id="login-form" onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label id="login-email-label" for="login-email">Email / Developer ID</label>
+                            <input type="text" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <div id="login-error" class="error-message"></div>
+                        <button type="submit" class="btn-primary">Login</button>
+                    </form>
+                    <p class="auth-switch">Don't have an account? <a href="#" onclick="showPage('signup')">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Page -->
+        <div id="page-signup" class="page">
+            <div class="container">
+                <div class="auth-form">
+                    <h2>Create an Account</h2>
+                    <div class="form-tabs">
+                        <button class="tab active" onclick="switchSignupTab('user')">User Account</button>
+                        <button class="tab" onclick="switchSignupTab('seller')">Seller Account</button>
+                    </div>
+                    <form id="signup-form" onsubmit="handleSignup(event)">
+                        <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="signup-email" required></div>
+                        <div class="form-group"><label>Phone</label><input type="tel" id="signup-phone" required></div>
+                        <div class="form-group"><label>Password</label><input type="password" id="signup-password" required minlength="6"></div>
+                        <div id="signup-error" class="error-message"></div>
+                        <button type="submit" class="btn-primary">Create Account</button>
+                    </form>
+                    <p class="auth-switch">Already have an account? <a href="#" onclick="showPage('login')">Login</a></p>
+                    <p class="auth-switch">Want to sell websites? <a href="#" onclick="showPage('seller-apply')">Apply to be a Seller</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seller Application Page -->
+        <div id="page-seller-apply" class="page">
+            <div class="container">
+                <div class="auth-form">
+                    <h2>Apply to Become a Seller</h2>
+                    <p>Complete verification to start selling websites on Pravi.</p>
+                    <form id="seller-apply-form" onsubmit="handleSellerApplication(event)">
+                        <div class="form-group"><label>Full Name</label><input type="text" id="apply-name" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="apply-email" required></div>
+                        <div class="form-group"><label>Phone</label><input type="tel" id="apply-phone" required></div>
+                        <div class="form-group"><label>Bank Account Number</label><input type="text" id="apply-bank-account" required></div>
+                        <div class="form-group"><label>IFSC Code</label><input type="text" id="apply-ifsc-code" required></div>
+                        <div class="form-group"><label>Bank Holder Name</label><input type="text" id="apply-holder-name" required></div>
+                        <div class="form-group"><label>Aadhaar Card (Image/PDF, max 5MB)</label><input type="file" id="apply-aadhaar" accept="image/*,.pdf" required></div>
+                        <div class="form-group"><label>PAN Card (Image/PDF, max 5MB)</label><input type="file" id="apply-pan" accept="image/*,.pdf" required></div>
+                        <div id="apply-error" class="error-message"></div>
+                        <div id="apply-success" class="success-message"></div>
+                        <button type="submit" class="btn-primary">Submit Application</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- User (Buyer) Dashboard -->
+        <div id="page-user-dashboard" class="page">
+            <div class="container">
+                <h2>My Dashboard</h2>
+                <div class="dashboard-content">
+                    <h3>My Inquiries</h3>
+                    <div id="user-inquiries" class="inquiries-list"><p class="loading">Loading inquiries...</p></div>
+                    <h3 style="margin-top: 2rem;">My Orders</h3>
+                    <div id="user-orders" class="orders-list"><p class="loading">Loading orders...</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seller Dashboard -->
+        <div id="page-seller-dashboard" class="page">
+            <div class="container">
+                <h2>Seller Dashboard</h2>
+                <div class="dashboard-actions">
+                    <button class="btn-primary" onclick="showCreateListing()">+ Create New Listing</button>
+                </div>
+                <div id="listing-form-container" style="display:none;">
+                    <h3 id="listing-form-title">Create Listing</h3>
+                    <form id="listing-form" onsubmit="handleListingSubmit(event)">
+                        <input type="hidden" id="edit-listing-id">
+                        <div class="form-group"><label>Title</label><input type="text" id="listing-title" required></div>
+                        <div class="form-group"><label>Description</label><textarea id="listing-description" required rows="4"></textarea></div>
+                        <div class="form-group"><label>Price (INR)</label><input type="number" id="listing-price" required min="0"></div>
+                        <div class="form-group"><label>Website URL (Live Demo)</label><input type="url" id="listing-url" required></div>
+                        <div class="form-group"><label>Listing Image</label><input type="file" id="listing-image" accept="image/*"><small>Leave empty to keep existing image when editing.</small></div>
+                        <div class="form-group"><label>Contact Email</label><input type="email" id="listing-email" required></div>
+                        <div class="form-group"><label>Contact Phone</label><input type="tel" id="listing-phone" required></div>
+                        <div id="listing-error" class="error-message"></div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Save Listing</button>
+                            <button type="button" class="btn-secondary" onclick="cancelListingForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                <h3>My Listings</h3>
+                <div id="seller-listings" class="manage-listings-grid"><p class="loading">Loading listings...</p></div>
+                <h3>Inquiries Received</h3>
+                <div id="seller-inquiries" class="inquiries-list"><p class="loading">Loading inquiries...</p></div>
+            </div>
+        </div>
+
+        <!-- Developer (Admin) Dashboard -->
+        <div id="page-developer-dashboard" class="page">
+            <div class="container">
+                <h2>Developer Dashboard (Admin)</h2>
+                <section class="admin-section">
+                    <h3>Pending Seller Applications</h3>
+                    <div id="developer-applications" class="applications-list"><p class="loading">Loading applications...</p></div>
+                </section>
+                <section class="admin-section">
+                    <h3>Manage Platform Listings</h3>
+                    <div id="developer-listings-manage" class="manage-listings-grid"><p class="loading">Loading listings...</p></div>
+                </section>
+                <section class="admin-section">
+                    <h3>Order Management</h3>
+                    <div id="developer-orders" class="orders-list"><p class="loading">Loading orders...</p></div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Testimonials Page -->
+        <div id="page-testimonials" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>What Our Users Say</h2>
+                </div>
+                <section class="testimonials" style="padding-top: 0;">
+                    <div class="testimonials-grid">
+                        <div class="testimonial-card reveal-on-scroll">
+                            <p class="testimonial-text">"Pravi made it incredibly easy to sell my side project. The process was smooth, from application to getting my first inquiry!"</p>
+                            <p class="testimonial-author">- Anjali P., Web Developer</p>
+                        </div>
+                        <div class="testimonial-card reveal-on-scroll">
+                            <p class="testimonial-text">"As a buyer, I found the perfect pre-built e-commerce site for my new business. Saved me months of development time and effort."</p>
+                            <p class="testimonial-author">- Rohan S., Entrepreneur</p>
+                        </div>
+                        <div class="testimonial-card reveal-on-scroll">
+                            <p class="testimonial-text">"The quality of websites listed on Pravi is top-notch. It's my go-to place for finding reliable and well-coded web projects."</p>
+                            <p class="testimonial-author">- Priya K., Agency Owner</p>
+                        </div>
+                        <div class="testimonial-card reveal-on-scroll">
+                            <p class="testimonial-text">"I was hesitant about selling my website, but the verification process gave me confidence. A trustworthy platform for developers."</p>
+                            <p class="testimonial-author">- Vikram C., Freelancer</p>
+                        </div>
+                        <div class="testimonial-card reveal-on-scroll">
+                            <p class="testimonial-text">"Found a fantastic portfolio website template here. The live demo was exactly what I needed to make a decision. Highly recommended!"</p>
+                            <p class="testimonial-author">- Meera D., Designer</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Checkout Page -->
+        <div id="page-checkout" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>Checkout</h2>
+                </div>
+                <div class="checkout-layout">
+                    <div id="checkout-item-summary">
+                        <!-- Item summary will be rendered here by JS -->
+                    </div>
+                    <div class="checkout-details">
+                        <h3>Order Summary</h3>
+                        <div class="price-details">
+                            <div class="price-row">
+                                <span>Subtotal</span>
+                                <span id="checkout-subtotal">₹0</span>
+                            </div>
+                            <div class="price-row">
+                                <span>GST (18%)</span>
+                                <span id="checkout-gst">₹0</span>
+                            </div>
+                            <div class="price-row coupon-row" style="display: none;">
+                                <span>Coupon Discount</span>
+                                <span id="checkout-discount">-₹0</span>
+                            </div>
+                            <div class="price-row total-row">
+                                <span>Total</span>
+                                <span id="checkout-total">₹0</span>
+                            </div>
+                        </div>
+                        <div class="coupon-form">
+                            <input type="text" id="coupon-code" placeholder="Enter coupon code">
+                            <button id="apply-coupon-btn" class="btn-secondary">Apply</button>
+                        </div>
+                        <div id="coupon-message" class="info-message"></div>
+                        <div class="payment-section">
+                            <div class="payment-warning">
+                                <strong>Demonstration Only:</strong> This button will open your UPI payment app. This website cannot verify if the payment is successful.
+                            </div>
+                            <a href="#" id="pay-upi-btn" class="btn-primary btn-large">Pay with UPI</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Manual Page -->
+        <div id="page-user-manual" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>User Manual</h2>
+                </div>
+                <div class="manual-content">
+                    <div class="manual-section">
+                        <h3><span class="role-badge seller-badge">Seller</span> Workflow</h3>
+                        <p>Sellers can list their ready-made websites for sale.</p>
+                        <ol>
+                            <li><strong>Apply:</strong> Click on <strong>"Become a Seller"</strong> on the homepage and submit the application form with your details and documents.</li>
+                            <li><strong>Wait for Approval:</strong> The platform Admin must approve your application before you can create a seller account.</li>
+                            <li><strong>Sign Up:</strong> Once approved, go to the <strong>Sign Up</strong> page. Enter your details using the <strong>same email</strong> you applied with. The "Seller" role will be assigned to you automatically.</li>
+                            <li><strong>Login:</strong> Log in using the <strong>Seller</strong> tab with the account you just created.</li>
+                            <li><strong>Create Listing:</strong> From your seller dashboard, you can create new listings, including a title, description, price, and image for your website.</li>
+                        </ol>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3><span class="role-badge buyer-badge">Buyer</span> Workflow</h3>
+                        <p>Buyers can browse, find, and inquire about websites.</p>
+                        <ol>
+                            <li><strong>Sign Up:</strong> Create a standard account using the <strong>Sign Up</strong> page (use the "User Account" tab).</li>
+                            <li><strong>Browse:</strong> Explore all available websites on the "Browse Websites" page. You can search and sort to find what you need.</li>
+                            <li><strong>Send Inquiry:</strong> When you find a website you like, open its detail page and use the form to send a message directly to the seller. You must be logged in to do this.</li>
+                            <li><strong>Track Inquiries:</strong> Go to "My Dashboard" to see a history of all the inquiries you've sent.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terms & Privacy Page -->
+        <div id="page-terms" class="page">
+            <div class="container">
+                <h2>Terms & Conditions and Privacy Policy</h2>
+                <section class="legal-section">
+                    <h3>Terms & Conditions</h3>
+                    <p>Welcome to Pravi. By using our platform, you agree to these terms.</p>
+                    <h4>1. Roles</h4>
+                    <p><b>Users</b> are individuals who browse and purchase websites. <b>Sellers</b> are verified individuals who list their websites for sale. The <b>Developer</b> is the platform administrator.</p>
+                    <h4>2. Seller Verification</h4>
+                    <p>Sellers must submit valid identity documents (Aadhaar, PAN) for verification. This information is stored securely and is only used for verification by the Developer.</p>
+                    <h4>3. Transactions</h4>
+                    <p>Pravi is a marketplace to connect buyers and sellers. All transactions and website transfers are handled directly between the User and the Seller. Pravi is not liable for any issues arising from transactions.</p>
+                </section>
+                <section class="legal-section">
+                    <h3>Privacy Policy</h3>
+                    <p>Your privacy is important to us.</p>
+                    <h4>1. Information Collection</h4>
+                    <p>We collect personal information (name, email) for account creation. For Sellers, we also collect identity documents for verification.</p>
+                    <h4>2. Data Usage</h4>
+                    <p>Your data is used to operate the platform, facilitate communication, and verify identities. We do not sell your data. Seller identity documents are confidential and only accessible by the platform Developer for approval.</p>
+                </section>
+            </div>
+        </div>
+
+        <!-- Contact Page -->
+        <div id="page-contact" class="page">
+            <div class="container">
+                <h2>Contact Us</h2>
+                <div class="contact-content">
+                    <p>For questions or support, please reach out. (This is a demo form).</p>
+                    <form id="contact-form" action="https://formspree.io/f/mpwreabr" method="POST">
+                        <div class="form-group"><label>Your Name</label><input type="text" name="name" required></div>
+                        <div class="form-group"><label>Your Email</label><input type="email" name="email" required></div>
+                        <div class="form-group"><label>Message</label><textarea name="message" required rows="5"></textarea></div>
+                        <button type="submit" class="btn-primary">Send Message</button>
+                    </form>
+                </div>
+
+                <div class="faq-section">
+                    <h2 class="section-title" style="margin-top: 4rem;">Frequently Asked Questions</h2>
+                    <div class="faq-container">
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>How do I become a seller?</span>
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>First, sign up for a regular user account. Then, from the homepage, click "Become a Seller" and submit the application. Once an admin approves your application, you can log out and sign up again using the same email on the "Seller Account" tab.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>Is it free to list a website?</span>
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Yes, listing your websites on Pravi is completely free. We are a marketplace to connect buyers and sellers directly, and we do not charge any commission on sales.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>How do I contact a seller?</span>
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>To contact a seller, you must have a buyer account and be logged in. Navigate to the listing you're interested in, and you will find a form to send an inquiry directly to the seller.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>What happens after I send an inquiry?</span>
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>The seller receives your message and contact details. They will then contact you directly via email or phone to discuss the details of the website and the sale. All transactions are handled directly between you and the seller.</p>
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                <span>Are the websites on Pravi secure?</span>
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>We verify our sellers to create a trustworthy marketplace. However, the quality and security of the listed websites are the responsibility of the individual seller. We strongly encourage buyers to review live demos and ask the seller detailed questions before making a purchase.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <img src="favicon.svg" alt="Pravi Logo" class="logo-img footer-logo">
+                    <p>The premier marketplace for ready-made websites.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>For Buyers</h4>
+                    <a href="#" onclick="showPage('listings')">Browse Websites</a>
+                    <a href="#" onclick="showPage('signup')">Create an Account</a>
+                </div>
+                <div class="footer-section">
+                    <h4>For Sellers</h4>
+                    <a href="#" onclick="showPage('seller-apply')">Apply to Sell</a>
+                    <a href="#" onclick="switchLoginTab('seller'); showPage('login');">Seller Login</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Platform</h4>
+                    <a href="#" onclick="showPage('user-manual')">User Manual</a>
+                    <a href="#" onclick="showPage('testimonials')">Testimonials</a>
+                    <a href="#" onclick="showPage('terms')">Terms & Privacy</a>
+                    <a href="#" onclick="showPage('contact')">Contact Us</a>
+                    <a href="#" onclick="switchLoginTab('developer'); showPage('login');">Developer Login</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Pravi Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <!-- App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
