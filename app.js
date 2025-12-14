@@ -1,5 +1,5 @@
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.4)
+// Pravi Marketplace - Rewritten Application Logic (v2.5)
 // ============================================================
 
 // ============================================================
@@ -49,6 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
         listingsApi.fetch(); 
         cart.init(); 
         showPage('home'); 
+        
+        // Initialize Contact Form Listener
+        const contactForm = document.getElementById('footer-contact-form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', handleContactFormSubmit);
+        }
     }
 });
 
@@ -534,7 +540,7 @@ async function deleteListing(listingId) {
 }
 
 // ============================================================
-// FIX: USER DASHBOARD INQUIRIES
+// DASHBOARD & INQUIRIES
 // ============================================================
 async function renderUserDashboard() {
     const inquiriesContainer = document.getElementById('user-inquiries');
@@ -554,7 +560,6 @@ async function renderUserDashboard() {
                 </div>`).join('');
         } else { inquiriesContainer.innerHTML = '<p class="empty-state">No inquiries sent.</p>'; }
     } catch (error) {
-        // ERROR HANDLING ADDED
         console.error("Inquiries Error:", error);
         inquiriesContainer.innerHTML = `<div class="error-message" style="display:block;">
             <p>Could not load inquiries.</p>
@@ -892,6 +897,51 @@ async function updateOrderStatus(orderId, newStatus) {
     } catch (error) { console.error("Error updating:", error); alert("Update failed."); }
 }
 
+// ============================================================
+// NEW: FOOTER CONTACT FORM LOGIC
+// ============================================================
+async function handleContactFormSubmit(event) {
+    event.preventDefault(); // Stop page reload/redirect (Server Change)
+    
+    const emailEl = document.getElementById('contact-email');
+    const messageEl = document.getElementById('contact-message');
+    const successMsg = document.getElementById('contact-success-msg');
+    const errorMsg = document.getElementById('contact-error-msg');
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+
+    if (!emailEl.value || !messageEl.value) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    successMsg.style.display = 'none';
+    errorMsg.style.display = 'none';
+
+    try {
+        // Save to Firebase "server"
+        await database.ref('contact_messages').push({
+            email: emailEl.value,
+            message: messageEl.value,
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        // Show Success Message
+        emailEl.value = '';
+        messageEl.value = '';
+        successMsg.style.display = 'block';
+        
+    } catch (error) {
+        console.error("Contact Form Error:", error);
+        errorMsg.textContent = "Error sending message. Please try again.";
+        errorMsg.style.display = 'block';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+    }
+}
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const newPage = document.getElementById(`page-${pageId}`);
@@ -919,5 +969,5 @@ function showPage(pageId) {
     }
 }
 
-console.log('app.js loaded (v2.4)');
+console.log('app.js loaded (v2.5)');
 
