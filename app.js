@@ -556,6 +556,20 @@ async function renderAdminDashboard() {
     }
 }
 
+function showCreateListing() {
+    document.getElementById('listing-form-container').style.display = 'block';
+    document.querySelector('#page-seller-dashboard .dashboard-actions').style.display = 'none';
+    document.getElementById('listing-form').reset();
+    document.getElementById('listing-form-title').textContent = 'Create Listing';
+    document.getElementById('edit-listing-id').value = '';
+}
+
+function cancelListingForm() {
+    document.getElementById('listing-form-container').style.display = 'none';
+    document.querySelector('#page-seller-dashboard .dashboard-actions').style.display = 'block';
+    document.getElementById('listing-form').reset();
+}
+
 
 
 async function handleListingSubmit(event) {
