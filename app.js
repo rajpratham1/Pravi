@@ -1,6 +1,6 @@
 
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.2)
+// Pravi Marketplace - Rewritten Application Logic (v2.3)
 // ============================================================
 
 // ============================================================
@@ -17,21 +17,15 @@ let currentUser = {
 };
 
 // The 'firebaseConfig' object is loaded from 'firebase-config.js'
-// which should be generated during the Vercel build process.
 try {
-    // 1. Check if the configuration file loaded at all.
     if (typeof firebaseConfig === 'undefined') {
-        throw new Error('Critical Error: "firebase-config.js" failed to load. This usually means "generate-config.js" did not run during the build. Please check the console for 404 errors.');
+        throw new Error('Critical Error: "firebase-config.js" failed to load.');
     }
-
-    // 2. Check if the configuration has the required keys.
     if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
-         throw new Error('Firebase configuration is empty. Please check that your Environment Variables (PUBLIC_FIREBASE_API_KEY, PUBLIC_FIREBASE_DATABASE_URL, etc.) are set correctly in Vercel Project Settings.');
+         throw new Error('Firebase configuration is empty.');
     }
-
-    // 3. Validate the databaseURL format (relaxed check).
     if (typeof firebaseConfig.databaseURL !== 'string' || !firebaseConfig.databaseURL.startsWith('https://')) {
-        throw new Error(`Invalid Firebase databaseURL. It must start with "https://". Provided value: "${firebaseConfig.databaseURL}"`);
+        throw new Error(`Invalid Firebase databaseURL.`);
     }
 
     app = firebase.initializeApp(firebaseConfig);
@@ -41,8 +35,7 @@ try {
     console.log('Firebase initialized successfully');
 } catch (error) {
     console.error('Firebase initialization error:', error);
-    // Display a user-friendly error message on the page.
-    document.body.innerHTML = `<div class="container" style="padding: 2rem;"><div class="error-message" style="display:block;"><h3>Firebase Config Error</h3><p>${error.message}</p><p>This site is not configured correctly. Please contact the administrator.</p></div></div>`;
+    document.body.innerHTML = `<div class="container" style="padding: 2rem;"><div class="error-message" style="display:block;"><h3>Firebase Config Error</h3><p>${error.message}</p></div></div>`;
 }
 
 // ============================================================
@@ -55,15 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
         initFaqAccordion();
         initScrollAnimations();
         initAuthListener();
-        listingsApi.fetch(); // Fetch listings on load
-        cart.init(); // Initialize cart
-
-        showPage('home'); // Show the home page by default
+        listingsApi.fetch(); 
+        cart.init(); 
+        showPage('home'); 
     }
 });
 
 // ============================================================
-// AUTHENTICATION LISTENER & UI UPDATES
+// AUTHENTICATION LISTENER
 // ============================================================
 function initAuthListener() {
     auth.onAuthStateChanged(async (user) => {
@@ -79,30 +71,21 @@ function initAuthListener() {
                         role: userData.role,
                         name: userData.name
                     };
-                    console.log('User role fetched:', currentUser.role);
                     updateUIAfterLogin();
                     
-                    // Redirect to the correct dashboard if user just logged in
                     if (['login', 'signup'].includes(currentPage)) {
                         switch (currentUser.role) {
-                            case 'admin':
-                                showPage('developer-dashboard');
-                                break;
-                            case 'seller':
-                                showPage('seller-dashboard');
-                                break;
-                            default:
-                                showPage('user-dashboard');
+                            case 'admin': showPage('developer-dashboard'); break;
+                            case 'seller': showPage('seller-dashboard'); break;
+                            default: showPage('user-dashboard');
                         }
                     }
                 } else {
-                    // This might happen if DB entry fails after signup. Treat as logged out.
-                    console.error("User exists in Auth, but not in Database. Logging out.");
                     logout();
                 }
             } catch (error) {
                 console.error("Error fetching user data:", error);
-                logout(); // Log out on error to prevent inconsistent state
+                logout();
             }
         } else {
             currentUser = { isLoggedIn: false, uid: null, role: null, email: null, name: null };
@@ -123,7 +106,6 @@ function updateUIAfterLogin() {
         userMenu.style.display = 'flex';
         usernameDisplay.textContent = currentUser.name || currentUser.email.split('@')[0];
 
-        // Customize dashboard link based on role
         if (dashboardLink) {
             let dashboardPage = 'user-dashboard';
             if (currentUser.role === 'admin') dashboardPage = 'developer-dashboard';
@@ -131,7 +113,6 @@ function updateUIAfterLogin() {
             dashboardLink.setAttribute('onclick', `showPage('${dashboardPage}')`);
         }
         
-        // Hide "Become a Seller" button if user is already a seller or admin
         if (becomeSellerBtn) {
             if (currentUser.role === 'seller' || currentUser.role === 'admin') {
                 becomeSellerBtn.style.display = 'none';
@@ -139,20 +120,14 @@ function updateUIAfterLogin() {
                 becomeSellerBtn.style.display = 'inline-block';
             }
         }
-
     } else {
         authLinks.style.display = 'flex';
         userMenu.style.display = 'none';
         usernameDisplay.textContent = '';
-        if (dashboardLink) {
-             dashboardLink.setAttribute('onclick', `showPage('dashboard')`); // Reset to generic
-        }
-        if (becomeSellerBtn) {
-            becomeSellerBtn.style.display = 'inline-block'; // Show for logged-out users
-        }
+        if (dashboardLink) dashboardLink.setAttribute('onclick', `showPage('dashboard')`);
+        if (becomeSellerBtn) becomeSellerBtn.style.display = 'inline-block';
     }
 }
-
 
 function initTheme() {
     const themeCheckbox = document.getElementById('theme-checkbox');
@@ -184,9 +159,7 @@ function initFaqAccordion() {
         question.addEventListener('click', () => {
             const isActive = item.classList.contains('active');
             faqItems.forEach(i => i.classList.remove('active'));
-            if (!isActive) {
-                item.classList.add('active');
-            }
+            if (!isActive) item.classList.add('active');
         });
     });
 }
@@ -194,23 +167,16 @@ function initFaqAccordion() {
 function initScrollAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
+            if (entry.isIntersecting) entry.target.classList.add('visible');
         });
-    }, {
-        threshold: 0.1
-    });
-
-    const revealElements = document.querySelectorAll('.reveal-on-scroll');
-    revealElements.forEach(el => observer.observe(el));
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
 }
 
 // ============================================================
 // LISTING MANAGEMENT
 // ============================================================
 let allListings = [];
-
 const listingsApi = {
     fetch: async function() {
         try {
@@ -221,8 +187,7 @@ const listingsApi = {
                     id: key,
                     ...listingsData[key],
                     imageBase64: listingsData[key].imageBase64
-                })).sort((a, b) => b.createdAt - a.createdAt); // Sort newest first by default
-                
+                })).sort((a, b) => b.createdAt - a.createdAt);
                 this.render();
             } else {
                 allListings = [];
@@ -235,46 +200,32 @@ const listingsApi = {
     },
     
     render: function() {
-        // Render latest 3 on home page
         this.renderListings('home-listings', allListings.slice(0, 3));
-        // Render all on the listings page, respecting filters
         this.filterAndRender();
     },
 
     filterAndRender: function() {
         const searchTerm = document.getElementById('search-input').value.toLowerCase();
         const sortOrder = document.getElementById('sort-select').value;
-
         let filtered = allListings.filter(listing => 
             listing.title.toLowerCase().includes(searchTerm) ||
             listing.description.toLowerCase().includes(searchTerm)
         );
-
         switch (sortOrder) {
-            case 'price-low':
-                filtered.sort((a, b) => a.price - b.price);
-                break;
-            case 'price-high':
-                filtered.sort((a, b) => b.price - a.price);
-                break;
-            case 'newest':
-            default:
-                filtered.sort((a, b) => b.createdAt - a.createdAt);
-                break;
+            case 'price-low': filtered.sort((a, b) => a.price - b.price); break;
+            case 'price-high': filtered.sort((a, b) => b.price - a.price); break;
+            default: filtered.sort((a, b) => b.createdAt - a.createdAt); break;
         }
-        
         this.renderListings('all-listings', filtered);
     },
 
     renderListings: function(containerId, listings) {
         const container = document.getElementById(containerId);
         if (!container) return;
-
         if (listings.length === 0) {
             container.innerHTML = '<p class="empty-state">No listings found.</p>';
             return;
         }
-
         container.innerHTML = listings.map(listing => `
             <div class="listing-card" onclick="showListingDetail('${listing.id}')">
                 <div class="listing-image-wrapper">
@@ -293,14 +244,10 @@ const listingsApi = {
     }
 };
 
-
-
-
-
 // ============================================================
 // FORM HANDLING & AUTHENTICATION
 // ============================================================
-let currentUserType = 'user'; // 'user', 'seller', or 'developer'
+let currentUserType = 'user';
 
 function showError(elementId, message) {
     const errorEl = document.getElementById(elementId);
@@ -310,24 +257,16 @@ function showError(elementId, message) {
 
 function switchLoginTab(tabName) {
     currentUserType = tabName;
-    const tabs = document.querySelectorAll('#page-login .form-tabs .tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('#page-login .form-tabs .tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#page-login .form-tabs .tab[onclick*="'${tabName}'"]`).classList.add('active');
-    
-    // Adapt form for developer login
     const emailLabel = document.getElementById('login-email-label');
-    if (tabName === 'developer') {
-        emailLabel.textContent = 'Developer ID';
-    } else {
-        emailLabel.textContent = 'Email';
-    }
+    emailLabel.textContent = (tabName === 'developer') ? 'Developer ID' : 'Email';
     showError('login-error', '');
 }
 
 function switchSignupTab(tabName) {
     currentUserType = tabName;
-    const tabs = document.querySelectorAll('#page-signup .form-tabs .tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('#page-signup .form-tabs .tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`#page-signup .form-tabs .tab[onclick*="'${tabName}'"]`).classList.add('active');
     showError('signup-error', '');
 }
@@ -341,40 +280,21 @@ async function handleSignup(event) {
     const role = currentUserType === 'seller' ? 'seller' : 'user';
 
     showError('signup-error', '');
-
     try {
         if (role === 'seller') {
-            // Per README, sellers must be pre-approved.
             const approvedSnapshot = await database.ref(`approvedEmails/${btoa(email)}`).once('value');
-            if (!approvedSnapshot.exists()) {
-                throw new Error("This email is not approved for seller registration. Please apply and wait for approval first.");
-            }
+            if (!approvedSnapshot.exists()) throw new Error("This email is not approved for seller registration.");
         }
-
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-
-        const newUser = {
-            name: name,
-            email: email,
-            phone: phone,
-            role: role,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        };
-
-        await database.ref('users/' + user.uid).set(newUser);
-        console.log('User created and data saved to database.');
-        showPage('dashboard'); // Redirect to dashboard after signup
-
+        await database.ref('users/' + userCredential.user.uid).set({
+            name: name, email: email, phone: phone, role: role, createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
+        showPage('dashboard');
     } catch (error) {
-        console.error('Signup Error:', error);
         showError('signup-error', error.message);
     }
 }
 
-// ============================================================
-// LOGIN HANDLER (Secure: No Hardcoded Credentials)
-// ============================================================
 async function handleLogin(event) {
     event.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -382,80 +302,51 @@ async function handleLogin(event) {
     showError('login-error', '');
 
     try {
-        // 1. Authenticate with Firebase (Checks against the DB/Auth automatically)
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // 2. Extra Security Check for Developers
         if (currentUserType === 'developer') {
             const snapshot = await database.ref('users/' + user.uid).once('value');
             const userData = snapshot.val();
-
             if (!userData || userData.role !== 'admin') {
-                // User logged in, but is NOT an admin. Kick them out.
                 await auth.signOut();
                 throw new Error('Access Denied: You do not have Developer permissions.');
             }
-
-            // 3. Update the saved password in DB (so it shows on your dashboard)
-            // This ensures if you change your password, the dashboard updates too.
-            await database.ref('users/' + user.uid).update({
-                password: password
-            });
+            // Update saved password for dashboard display
+            await database.ref('users/' + user.uid).update({ password: password });
         }
-
-        // Login successful - Auth listener handles redirection
         console.log('Login successful');
-
     } catch (error) {
         console.error('Login Error:', error);
         showError('login-error', error.message);
     }
 }
 
-
 function logout() {
-    auth.signOut().then(() => {
-        console.log('User signed out successfully.');
-        showPage('home');
-    });
+    auth.signOut().then(() => showPage('home'));
 }
 
 async function handleSellerApplication(event) {
     event.preventDefault();
-    if (!currentUser.isLoggedIn) {
-        showError('apply-error', 'You must be logged in to apply.');
-        return;
-    }
+    if (!currentUser.isLoggedIn) { showError('apply-error', 'You must be logged in.'); return; }
 
-    const form = event.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
     showError('apply-error', '');
-    document.getElementById('apply-success').textContent = '';
 
     try {
         const email = document.getElementById('apply-email').value;
-
-        // Prevent duplicate applications
         const emailCheck = await database.ref(`applicantEmails/${btoa(email)}`).once('value');
-        if (emailCheck.exists()) {
-            throw new Error('An application with this email already exists.');
-        }
+        if (emailCheck.exists()) throw new Error('Application already exists.');
 
         const aadhaarFile = document.getElementById('apply-aadhaar').files[0];
         const panFile = document.getElementById('apply-pan').files[0];
+        if (!aadhaarFile || !panFile) throw new Error('Files required.');
 
-        if (!aadhaarFile || !panFile) {
-            throw new Error('Both Aadhaar and PAN card files are required.');
-        }
-
-        // Convert files to Base64
         const aadhaarData = await fileToBase64(aadhaarFile);
         const panData = await fileToBase64(panFile);
 
-        const application = {
+        await database.ref('applications').push({
             applicantId: currentUser.uid,
             name: document.getElementById('apply-name').value,
             email: email,
@@ -467,21 +358,14 @@ async function handleSellerApplication(event) {
             panData: panData,
             status: 'pending',
             appliedAt: firebase.database.ServerValue.TIMESTAMP
-        };
-
-        const newAppRef = database.ref('applications').push();
-        await newAppRef.set(application);
+        });
         await database.ref(`applicantEmails/${btoa(email)}`).set(true);
-
-        document.getElementById('apply-success').textContent = 'Application submitted successfully! You will be notified upon approval.';
-        form.reset();
-
+        document.getElementById('apply-success').textContent = 'Application submitted successfully!';
+        event.target.reset();
     } catch (error) {
-        console.error('Seller Application Error:', error);
         showError('apply-error', error.message);
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit Application';
+        submitBtn.disabled = false; submitBtn.textContent = 'Submit Application';
     }
 }
 
@@ -495,52 +379,40 @@ function fileToBase64(file) {
 }
 
 // ============================================================
-// ADMIN DASHBOARD (Shows ID & Password fetched from DB)
+// ADMIN DASHBOARD
 // ============================================================
 async function renderAdminDashboard() {
     const appsContainer = document.getElementById('developer-applications');
     const listingsContainer = document.getElementById('developer-listings-manage');
-    
-    // Clear containers
     appsContainer.innerHTML = '<p class="loading">Loading applications...</p>';
     listingsContainer.innerHTML = '<p class="loading">Loading listings...</p>';
 
-    // --- DISPLAY CREDENTIALS FROM DB ---
+    // Credentials Display
     try {
         const dashboardPage = document.getElementById('page-developer-dashboard');
-        
-        // Fetch current user data (including saved password)
         const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
         const userData = userSnapshot.val();
         
-        // Create or Update credential box
         let credBox = document.getElementById('admin-credentials-display');
         if (!credBox) {
             credBox = document.createElement('div');
             credBox.id = 'admin-credentials-display';
-            // Insert at the top of the dashboard
             const contentContainer = dashboardPage.querySelector('.dashboard-container') || dashboardPage;
             contentContainer.insertBefore(credBox, contentContainer.firstChild);
         }
-
         credBox.innerHTML = `
             <div style="background: #1e293b; border: 1px solid #475569; padding: 20px; border-radius: 8px; margin-bottom: 25px; color: white;">
                 <h3 style="margin-top: 0; border-bottom: 1px solid #475569; padding-bottom: 10px;">Developer Access Keys</h3>
                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 10px;">
                     <strong style="color: #94a3b8;">Developer ID:</strong>
                     <span style="font-family: monospace; font-size: 1.1em;">${userData.email || 'N/A'}</span>
-                    
                     <strong style="color: #94a3b8;">Password:</strong>
                     <span style="font-family: monospace; font-size: 1.1em; color: #4ade80;">${userData.password || 'Not Saved'}</span>
                 </div>
-            </div>
-        `;
-    } catch (err) {
-        console.error("Error displaying admin credentials:", err);
-    }
-    // -------------------------------
+            </div>`;
+    } catch (err) { console.error("Error displaying admin credentials:", err); }
 
-    // Render Listings for Admin
+    // Listings
     if (allListings.length > 0) {
         listingsContainer.innerHTML = allListings.map(l => `
             <div class="listing-card-manage">
@@ -552,13 +424,10 @@ async function renderAdminDashboard() {
                 <div class="manage-card-actions">
                     <button class="btn-danger" onclick="deleteListingAsAdmin('${l.id}')">Delete</button>
                 </div>
-            </div>
-        `).join('');
-    } else {
-        listingsContainer.innerHTML = '<p class="empty-state">No listings on the platform yet.</p>';
-    }
+            </div>`).join('');
+    } else { listingsContainer.innerHTML = '<p class="empty-state">No listings found.</p>'; }
 
-    // Fetch and Render Applications
+    // Applications
     try {
         const snapshot = await database.ref('applications').orderByChild('status').equalTo('pending').once('value');
         const apps = snapshot.val();
@@ -579,15 +448,11 @@ async function renderAdminDashboard() {
                             <button class="btn-primary" onclick="approveApplication('${appId}', '${app.email}')">Approve</button>
                             <button class="btn-secondary" onclick="rejectApplication('${appId}')">Reject</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
-        } else {
-            appsContainer.innerHTML = '<p class="empty-state">No pending applications.</p>';
-        }
+        } else { appsContainer.innerHTML = '<p class="empty-state">No pending applications.</p>'; }
     } catch (error) {
-        console.error("Error fetching applications:", error);
-        appsContainer.innerHTML = '<p class="error-message" style="display:block;">Could not load applications.</p>';
+        appsContainer.innerHTML = '<p class="error-message">Could not load applications.</p>';
     }
 }
 
@@ -605,24 +470,16 @@ function cancelListingForm() {
     document.getElementById('listing-form').reset();
 }
 
-
-
 async function handleListingSubmit(event) {
     event.preventDefault();
-    const form = event.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true; submitBtn.textContent = 'Saving...';
     showError('listing-error', '');
 
     try {
         const editId = document.getElementById('edit-listing-id').value;
         const imageFile = document.getElementById('listing-image').files[0];
-        
-        let imageBase64 = null;
-        if (imageFile) {
-            imageBase64 = await fileToBase64(imageFile);
-        }
+        let imageBase64 = imageFile ? await fileToBase64(imageFile) : null;
 
         const listingData = {
             title: document.getElementById('listing-title').value,
@@ -635,47 +492,30 @@ async function handleListingSubmit(event) {
         };
 
         if (editId) {
-            // Editing existing listing
-            const ref = database.ref(`listings/${editId}`);
-            if (imageBase64) {
-                listingData.imageBase64 = imageBase64;
-            }
+            if (imageBase64) listingData.imageBase64 = imageBase64;
             listingData.updatedAt = firebase.database.ServerValue.TIMESTAMP;
-            await ref.update(listingData);
+            await database.ref(`listings/${editId}`).update(listingData);
         } else {
-            // Creating new listing
             listingData.createdAt = firebase.database.ServerValue.TIMESTAMP;
-            if (imageBase64) {
-                listingData.imageBase64 = imageBase64;
-            } else {
-                throw new Error("An image is required for a new listing.");
-            }
+            if (imageBase64) listingData.imageBase64 = imageBase64;
+            else throw new Error("Image required.");
             await database.ref('listings').push(listingData);
         }
-
         cancelListingForm();
-        await listingsApi.fetch(); // Refresh all listings data
-        renderSellerDashboard(); // Refresh seller dashboard view
-
+        await listingsApi.fetch();
+        renderSellerDashboard();
     } catch (error) {
-        console.error("Listing submission error:", error);
         showError('listing-error', error.message);
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Save Listing';
+        submitBtn.disabled = false; submitBtn.textContent = 'Save Listing';
     }
 }
 
 function editListing(listingId) {
     const listing = allListings.find(l => l.id === listingId && l.userId === currentUser.uid);
-    if (!listing) {
-        console.error("Listing not found or you do not have permission to edit it.");
-        return;
-    }
-    
-    showCreateListing(); // Show the form
+    if (!listing) return;
+    showCreateListing();
     document.getElementById('listing-form-title').textContent = 'Edit Listing';
-    
     document.getElementById('edit-listing-id').value = listing.id;
     document.getElementById('listing-title').value = listing.title;
     document.getElementById('listing-description').value = listing.description;
@@ -683,38 +523,25 @@ function editListing(listingId) {
     document.getElementById('listing-url').value = listing.websiteURL;
     document.getElementById('listing-email').value = listing.contactEmail;
     document.getElementById('listing-phone').value = listing.contactPhone;
-    
-    // Note: Image field is not pre-filled for security reasons. User must re-upload if they want to change it.
 }
 
 async function deleteListing(listingId) {
-    const listing = allListings.find(l => l.id === listingId && l.userId === currentUser.uid);
-    if (!listing) {
-        console.error("Listing not found or you do not have permission to delete it.");
-        return;
-    }
-
-    if (confirm('Are you sure you want to delete this listing? This cannot be undone.')) {
+    if (confirm('Delete this listing?')) {
         try {
             await database.ref(`listings/${listingId}`).remove();
-            console.log(`Listing ${listingId} deleted by owner.`);
-            await listingsApi.fetch(); // Refresh all listings data
-            renderSellerDashboard(); // Refresh the view
-        } catch (error) {
-            console.error("Error deleting listing:", error);
-        }
+            await listingsApi.fetch();
+            renderSellerDashboard();
+        } catch (error) { console.error("Error deleting:", error); }
     }
 }
 
 async function renderUserDashboard() {
     const inquiriesContainer = document.getElementById('user-inquiries');
-    inquiriesContainer.innerHTML = '<p class="loading">Loading your inquiries...</p>';
-
+    inquiriesContainer.innerHTML = '<p class="loading">Loading...</p>';
     try {
         const inquiriesSnapshot = await database.ref('inquiries').orderByChild('buyerId').equalTo(currentUser.uid).once('value');
         const inquiriesData = inquiriesSnapshot.val() || {};
         const inquiries = Object.values(inquiriesData);
-
         if (inquiries.length > 0) {
             inquiriesContainer.innerHTML = inquiries.sort((a, b) => b.createdAt - a.createdAt).map(i => `
                 <div class="inquiry-card reveal-on-scroll">
@@ -723,14 +550,10 @@ async function renderUserDashboard() {
                         <span class="inquiry-date">${new Date(i.createdAt).toLocaleDateString()}</span>
                     </div>
                     <p class="inquiry-message">Your message: "${i.message}"</p>
-                </div>
-            `).join('');
-        } else {
-            inquiriesContainer.innerHTML = '<p class="empty-state">You have not sent any inquiries yet.</p>';
-        }
+                </div>`).join('');
+        } else { inquiriesContainer.innerHTML = '<p class="empty-state">No inquiries sent.</p>'; }
     } catch (error) {
-        console.error("Error fetching your inquiries:", error);
-        inquiriesContainer.innerHTML = '<p class="error-message" style="display:block;">Could not load your inquiries.</p>';
+        inquiriesContainer.innerHTML = '<p class="error-message">Could not load inquiries.</p>';
     }
 }
 
@@ -738,80 +561,57 @@ async function approveApplication(appId, email) {
     try {
         await database.ref(`applications/${appId}/status`).set('approved');
         await database.ref(`approvedEmails/${btoa(email)}`).set(true);
-        console.log(`Application ${appId} approved.`);
-        renderAdminDashboard(); // Refresh the view
-    } catch (error) {
-        console.error("Error approving application:", error);
-    }
+        renderAdminDashboard();
+    } catch (error) { console.error("Error approving:", error); }
 }
 
 async function rejectApplication(appId) {
     try {
         await database.ref(`applications/${appId}/status`).set('rejected');
-        console.log(`Application ${appId} rejected.`);
-        renderAdminDashboard(); // Refresh the view
-    } catch (error) {
-        console.error("Error rejecting application:", error);
-    }
+        renderAdminDashboard();
+    } catch (error) { console.error("Error rejecting:", error); }
 }
 
 async function deleteListingAsAdmin(listingId) {
-    if (confirm('Are you sure you want to permanently delete this listing from the platform?')) {
+    if (confirm('Delete this listing permanently?')) {
         try {
             await database.ref(`listings/${listingId}`).remove();
-            console.log(`Listing ${listingId} deleted by admin.`);
-            await listingsApi.fetch(); // Refetch all listings data
-            renderAdminDashboard(); 
-        } catch (error) {
-            console.error("Error deleting listing:", error);
-        }
+            await listingsApi.fetch();
+            renderAdminDashboard();
+        } catch (error) { console.error("Error deleting:", error); }
     }
 }
 
-
-// ============================================================
-// FINAL DASHBOARD & INQUIRY LOGIC (OVERRIDE)
-// ============================================================
 async function renderSellerDashboard() {
     const listingsContainer = document.getElementById('seller-listings');
     const inquiriesContainer = document.getElementById('seller-inquiries');
-    listingsContainer.innerHTML = '<p class="loading">Loading your listings...</p>';
-    inquiriesContainer.innerHTML = '<p class="loading">Loading inquiries...</p>';
+    listingsContainer.innerHTML = '<p class="loading">Loading...</p>';
+    inquiriesContainer.innerHTML = '<p class="loading">Loading...</p>';
 
-    // Fetch and render seller's listings
     try {
         const snapshot = await database.ref('listings').orderByChild('userId').equalTo(currentUser.uid).once('value');
         const listingsData = snapshot.val() || {};
         const listings = Object.keys(listingsData).map(id => ({ id, ...listingsData[id] }));
-        
         if (listings.length > 0) {
             listingsContainer.innerHTML = listings.sort((a,b) => b.createdAt - a.createdAt).map(l => `
                 <div class="listing-card-manage">
                     <img src="${l.imageBase64 || 'logo.svg'}" alt="${l.title}" class="manage-card-image">
                     <div class="manage-card-content">
                         <h4>${l.title}</h4>
-                        <p>Price: ₹${parseInt(l.price).toLocaleString('en-IN')}</p>
+                        <p>₹${parseInt(l.price).toLocaleString('en-IN')}</p>
                     </div>
                     <div class="manage-card-actions">
                         <button class="btn-secondary" onclick="editListing('${l.id}')">Edit</button>
                         <button class="btn-danger" onclick="deleteListing('${l.id}')">Delete</button>
                     </div>
-                </div>
-            `).join('');
-        } else {
-            listingsContainer.innerHTML = '<p class="empty-state">You have not created any listings yet.</p>';
-        }
-    } catch (error) {
-        console.error("Error fetching seller listings:", error);
-        listingsContainer.innerHTML = '<p class="error-message" style="display:block;">Could not load your listings.</p>';
-    }
+                </div>`).join('');
+        } else { listingsContainer.innerHTML = '<p class="empty-state">No listings created.</p>'; }
+    } catch (error) { listingsContainer.innerHTML = '<p class="error-message">Could not load listings.</p>'; }
     
-    // Fetch and render inquiries for this seller
     try {
         const inquiriesSnapshot = await database.ref('inquiries').orderByChild('sellerId').equalTo(currentUser.uid).once('value');
         const inquiriesData = inquiriesSnapshot.val() || {};
         const inquiries = Object.values(inquiriesData);
-
         if (inquiries.length > 0) {
             inquiriesContainer.innerHTML = inquiries.sort((a,b) => b.createdAt - a.createdAt).map(i => `
                 <div class="inquiry-card">
@@ -819,70 +619,38 @@ async function renderSellerDashboard() {
                         <span class="inquiry-listing-title">Regarding: ${i.listingTitle}</span>
                         <span class="inquiry-date">${new Date(i.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <div class="inquiry-user">
-                        From: ${i.buyerName} (${i.buyerEmail})
-                    </div>
+                    <div class="inquiry-user">From: ${i.buyerName} (${i.buyerEmail})</div>
                     <p class="inquiry-message">"${i.message}"</p>
-                </div>
-            `).join('');
-        } else {
-            inquiriesContainer.innerHTML = '<p class="empty-state">You have not received any inquiries yet.</p>';
-        }
-    } catch (error) {
-        console.error("Error fetching inquiries:", error);
-        inquiriesContainer.innerHTML = '<p class="error-message" style="display:block;">Could not load inquiries.</p>';
-    }
+                </div>`).join('');
+        } else { inquiriesContainer.innerHTML = '<p class="empty-state">No inquiries received.</p>'; }
+    } catch (error) { inquiriesContainer.innerHTML = '<p class="error-message">Could not load inquiries.</p>'; }
 }
 
-
-
-
-
-
 // ============================================================
-// CART & CHECKOUT LOGIC (OVERRIDE & ADDITION)
+// CART & CHECKOUT
 // ============================================================
-
 const cart = {
-    KEY: 'pravi_cart',
-    items: [],
-
+    KEY: 'pravi_cart', items: [],
     init: function() {
         const storedCart = localStorage.getItem(this.KEY);
         this.items = storedCart ? JSON.parse(storedCart) : [];
         this.updateCount();
     },
-
     add: function(listingId) {
         if (!this.items.includes(listingId)) {
-            this.items.push(listingId);
-            this.save();
-            alert('Item added to cart!');
-        } else {
-            alert('Item is already in your cart.');
-        }
+            this.items.push(listingId); this.save(); alert('Added to cart!');
+        } else { alert('Already in cart.'); }
     },
-
     remove: function(listingId) {
         this.items = this.items.filter(id => id !== listingId);
-        this.save();
-        renderCartPage(); // Re-render the cart page
+        this.save(); renderCartPage();
     },
-
-    get: function() {
-        return this.items;
-    },
-
+    get: function() { return this.items; },
     save: function() {
         localStorage.setItem(this.KEY, JSON.stringify(this.items));
         this.updateCount();
     },
-
-    clear: function() {
-        this.items = [];
-        this.save();
-    },
-
+    clear: function() { this.items = []; this.save(); },
     updateCount: function() {
         const countEl = document.getElementById('cart-item-count');
         if (countEl) {
@@ -892,46 +660,30 @@ const cart = {
     }
 };
 
-// Override showListingDetail to include Add to Cart button
 function showListingDetail(listingId) {
     const listing = allListings.find(l => l.id === listingId);
-    if (!listing) {
-        console.error(`Listing with ID ${listingId} not found.`);
-        showPage('listings');
-        return;
-    }
+    if (!listing) { showPage('listings'); return; }
 
     const detailContent = document.getElementById('listing-detail-content');
-    
     let actionButtonsHtml = '';
     if (currentUser.isLoggedIn && currentUser.uid === listing.userId) {
-        actionButtonsHtml = '<p>This is your own listing. You can manage it from your dashboard.</p>';
+        actionButtonsHtml = '<p>This is your own listing.</p>';
     } else {
         actionButtonsHtml = `
             <button class="btn-primary btn-large" onclick="cart.add('${listing.id}')">Add to Cart</button>
-            <button class="btn-secondary btn-large" onclick="buyNow('${listing.id}')">Buy Now</button>
-        `;
+            <button class="btn-secondary btn-large" onclick="buyNow('${listing.id}')">Buy Now</button>`;
     }
 
     const inquiryFormHtml = `
         <div class="inquiry-form">
             <h3>Contact Seller</h3>
-            ${
-                currentUser.isLoggedIn 
-                ? (currentUser.uid === listing.userId 
-                    ? '' // No inquiry form for own listing
-                    : `<form onsubmit="handleInquiry(event, '${listing.id}', '${listing.userId}')">
-                           <div class="form-group">
-                               <label for="inquiry-message">Your Message</label>
-                               <textarea id="inquiry-message" required rows="4"></textarea>
-                           </div>
-                           <div id="inquiry-error" class="error-message"></div>
-                           <button type="submit" class="btn-primary">Send Inquiry</button>
-                       </form>`)
-                : '<p class="auth-prompt">Please <a href="#" onclick="showPage(\'login\')">login</a> to contact the seller.</p>'
-            }
-        </div>
-    `;
+            ${currentUser.isLoggedIn ? (currentUser.uid === listing.userId ? '' : 
+                `<form onsubmit="handleInquiry(event, '${listing.id}', '${listing.userId}')">
+                     <div class="form-group"><label>Your Message</label><textarea id="inquiry-message" required rows="4"></textarea></div>
+                     <div id="inquiry-error" class="error-message"></div>
+                     <button type="submit" class="btn-primary">Send Inquiry</button>
+                 </form>`) : '<p class="auth-prompt">Please login to contact.</p>'}
+        </div>`;
 
     detailContent.innerHTML = `
         <div class="listing-detail">
@@ -939,62 +691,37 @@ function showListingDetail(listingId) {
             <div class="listing-detail-body">
                 <h2 class="listing-detail-title">${listing.title}</h2>
                 <p class="listing-detail-price">₹${parseInt(listing.price).toLocaleString('en-IN')}</p>
-                <div class="listing-actions" style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                    ${actionButtonsHtml}
-                </div>
+                <div class="listing-actions" style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">${actionButtonsHtml}</div>
                 <div class="listing-meta" style="margin-top: 2rem;">
                     <div class="meta-item"><span>Seller Contact</span><a href="mailto:${listing.contactEmail}">${listing.contactEmail}</a></div>
-                    <div class="meta-item"><span>Live Demo</span><a href="${listing.websiteURL}" target="_blank" rel="noopener noreferrer">View Live Site</a></div>
+                    <div class="meta-item"><span>Live Demo</span><a href="${listing.websiteURL}" target="_blank">View Live Site</a></div>
                 </div>
                 <p class="listing-detail-description">${listing.description.replace(/\n/g, '<br>')}</p>
                 ${inquiryFormHtml}
             </div>
-        </div>
-    `;
-    
+        </div>`;
     showPage('listing-detail');
 }
 
 async function handleInquiry(event, listingId, sellerId) {
     event.preventDefault();
-    if (!currentUser.isLoggedIn) {
-        alert("You must be logged in to send an inquiry.");
-        return;
-    }
-
+    if (!currentUser.isLoggedIn) { alert("Login required."); return; }
     const message = document.getElementById('inquiry-message').value;
     const submitBtn = event.target.querySelector('button[type="submit"]');
-    const errorEl = document.getElementById('inquiry-error');
-    
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending...';
-    errorEl.textContent = '';
+    submitBtn.disabled = true; submitBtn.textContent = 'Sending...';
 
     try {
         const listing = allListings.find(l => l.id === listingId);
-        const inquiry = {
-            listingId: listingId,
-            listingTitle: listing ? listing.title : 'Unknown Listing',
-            sellerId: sellerId,
-            buyerId: currentUser.uid,
-            buyerName: currentUser.name,
-            buyerEmail: currentUser.email,
-            message: message,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        };
-
-        await database.ref('inquiries').push(inquiry);
-        alert('Inquiry sent successfully!');
+        await database.ref('inquiries').push({
+            listingId: listingId, listingTitle: listing ? listing.title : 'Unknown',
+            sellerId: sellerId, buyerId: currentUser.uid, buyerName: currentUser.name,
+            buyerEmail: currentUser.email, message: message, createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
+        alert('Inquiry sent!');
         document.getElementById('inquiry-message').value = '';
-    } catch (error) {
-        console.error("Error sending inquiry:", error);
-        errorEl.textContent = "Failed to send inquiry. Please try again.";
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Inquiry';
-    }
+    } catch (error) { console.error(error); alert("Failed to send."); }
+    finally { submitBtn.disabled = false; submitBtn.textContent = 'Send Inquiry'; }
 }
-
 
 function renderCartPage() {
     const container = document.getElementById('cart-items-container');
@@ -1002,140 +729,70 @@ function renderCartPage() {
     const cartIds = cart.get();
     
     if (cartIds.length === 0) {
-        container.innerHTML = '<p class="empty-state">Your cart is empty.</p>';
+        container.innerHTML = '<p class="empty-state">Cart is empty.</p>';
         summaryTotalEl.textContent = '₹0';
         return;
     }
-
     const cartItems = allListings.filter(l => cartIds.includes(l.id));
-    
     container.innerHTML = cartItems.map(item => `
         <div class="listing-card-manage">
             <img src="${item.imageBase64 || 'logo.svg'}" alt="${item.title}" class="manage-card-image">
-            <div class="manage-card-content">
-                <h4>${item.title}</h4>
-                <p>₹${parseInt(item.price).toLocaleString('en-IN')}</p>
-            </div>
-            <div class="manage-card-actions">
-                <button class="btn-danger" onclick="cart.remove('${item.id}')">Remove</button>
-            </div>
-        </div>
-    `).join('');
-
-    const total = cartItems.reduce((sum, item) => sum + item.price, 0);
-    summaryTotalEl.textContent = `₹${total.toLocaleString('en-IN')}`;
+            <div class="manage-card-content"><h4>${item.title}</h4><p>₹${parseInt(item.price).toLocaleString('en-IN')}</p></div>
+            <div class="manage-card-actions"><button class="btn-danger" onclick="cart.remove('${item.id}')">Remove</button></div>
+        </div>`).join('');
+    summaryTotalEl.textContent = `₹${cartItems.reduce((sum, item) => sum + item.price, 0).toLocaleString('en-IN')}`;
 }
 
-let checkoutState = {
-    subtotal: 0,
-    gst: 0,
-    discount: 0,
-    total: 0
-};
-
+let checkoutState = { subtotal: 0, gst: 0, discount: 0, total: 0 };
 function goToCheckout() {
     const cartIds = cart.get();
     const cartItems = allListings.filter(l => cartIds.includes(l.id));
-    
-    if (cartItems.length === 0) {
-        alert("Your cart is empty. Add items before checking out.");
-        showPage('listings');
-        return;
-    }
+    if (cartItems.length === 0) { alert("Cart empty."); showPage('listings'); return; }
 
     checkoutState.subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
     checkoutState.gst = checkoutState.subtotal * 0.18;
     checkoutState.discount = 0;
-    
     updateCheckoutSummary();
     
-    const summaryContainer = document.getElementById('checkout-item-summary');
-    summaryContainer.innerHTML = cartItems.map(item => `
+    document.getElementById('checkout-item-summary').innerHTML = cartItems.map(item => `
         <div class="listing-card-manage">
             <img src="${item.imageBase64 || 'logo.svg'}" alt="${item.title}" class="manage-card-image">
-            <div class="manage-card-content">
-                <h4>${item.title}</h4>
-                <p>₹${parseInt(item.price).toLocaleString('en-IN')}</p>
-            </div>
-        </div>
-    `).join('');
-
+            <div class="manage-card-content"><h4>${item.title}</h4><p>₹${parseInt(item.price).toLocaleString('en-IN')}</p></div>
+        </div>`).join('');
     showPage('checkout');
-
-    document.getElementById('apply-coupon-btn')?.addEventListener('click', () => {
-        const couponInput = document.getElementById('coupon-code');
-        const messageEl = document.getElementById('coupon-message');
-        if (couponInput.value.trim().toUpperCase() === 'PRAVI10') {
-            checkoutState.discount = checkoutState.subtotal * 0.10;
-            messageEl.textContent = 'Coupon applied successfully! You got a 10% discount.';
-            messageEl.style.color = 'var(--accent-color)';
-        } else {
-            checkoutState.discount = 0;
-            messageEl.textContent = 'Invalid coupon code.';
-            messageEl.style.color = '#ef4444';
-        }
-        updateCheckoutSummary();
-    });
 }
 
 async function createOrder() {
-    if (!currentUser.isLoggedIn) {
-        alert('Please login to place an order.');
-        showPage('login');
-        return;
-    }
-
+    if (!currentUser.isLoggedIn) { alert('Login required.'); showPage('login'); return; }
     const cartIds = cart.get();
     const cartItems = allListings.filter(l => cartIds.includes(l.id));
-
-    if (cartItems.length === 0) {
-        alert("Your cart is empty.");
-        return;
-    }
-
-    const order = {
-        userId: currentUser.uid,
-        items: cartItems.map(item => ({ id: item.id, title: item.title, price: item.price })),
-        total: checkoutState.total,
-        status: 'pending',
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-    };
+    if (cartItems.length === 0) return;
 
     try {
-        const orderRef = await database.ref('orders').push(order);
-        console.log('Order created with ID:', orderRef.key);
+        await database.ref('orders').push({
+            userId: currentUser.uid,
+            items: cartItems.map(item => ({ id: item.id, title: item.title, price: item.price })),
+            total: checkoutState.total,
+            status: 'pending',
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        });
         cart.clear();
-        
-        const upiBtn = document.getElementById('pay-upi-btn');
-        window.location.href = upiBtn.href;
-
+        window.location.href = document.getElementById('pay-upi-btn').href;
         showPage('user-dashboard');
         renderUserOrders();
-
-    } catch (error) {
-        console.error("Error creating order:", error);
-        alert("There was an error placing your order. Please try again.");
-    }
+    } catch (error) { console.error("Order error:", error); alert("Order failed."); }
 }
 
 function updateCheckoutSummary() {
     checkoutState.total = checkoutState.subtotal + checkoutState.gst - checkoutState.discount;
-
     document.getElementById('checkout-subtotal').textContent = `₹${checkoutState.subtotal.toLocaleString('en-IN')}`;
     document.getElementById('checkout-gst').textContent = `₹${checkoutState.gst.toLocaleString('en-IN')}`;
-    document.querySelector('.coupon-row').style.display = checkoutState.discount > 0 ? 'flex' : 'none';
     document.getElementById('checkout-discount').textContent = `-₹${checkoutState.discount.toLocaleString('en-IN')}`;
     document.getElementById('checkout-total').textContent = `₹${checkoutState.total.toLocaleString('en-IN')}`;
     
     const upiBtn = document.getElementById('pay-upi-btn');
-    const upiId = '6200892887@ybl'; 
-    const upiName = 'Pravi Marketplace';
-    upiBtn.href = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${checkoutState.total.toFixed(2)}&cu=INR&tn=Payment for Pravi Marketplace`;
-    
-    upiBtn.onclick = (e) => {
-        e.preventDefault();
-        createOrder();
-    };
+    upiBtn.href = `upi://pay?pa=6200892887@ybl&pn=Pravi%20Marketplace&am=${checkoutState.total.toFixed(2)}&cu=INR&tn=Order`;
+    upiBtn.onclick = (e) => { e.preventDefault(); createOrder(); };
 }
 
 document.getElementById('apply-coupon-btn')?.addEventListener('click', () => {
@@ -1143,22 +800,22 @@ document.getElementById('apply-coupon-btn')?.addEventListener('click', () => {
     const messageEl = document.getElementById('coupon-message');
     if (couponInput.value.trim().toUpperCase() === 'PRAVI10') {
         checkoutState.discount = checkoutState.subtotal * 0.10;
-        messageEl.textContent = 'Coupon applied successfully! You got a 10% discount.';
-        messageEl.style.color = 'var(--accent-color)';
+        messageEl.textContent = 'Coupon applied!'; messageEl.style.color = 'var(--accent-color)';
     } else {
-        checkoutState.discount = 0;
-        messageEl.textContent = 'Invalid coupon code.';
-        messageEl.style.color = '#ef4444';
+        checkoutState.discount = 0; messageEl.textContent = 'Invalid coupon.'; messageEl.style.color = '#ef4444';
     }
     updateCheckoutSummary();
 });
 
-// Update showPage to render cart
+// ============================================================
+// FIX: ORDER RENDERING WITH ERROR REPORTING
+// ============================================================
 async function renderUserOrders() {
     const ordersContainer = document.getElementById('user-orders');
     ordersContainer.innerHTML = '<p class="loading">Loading your orders...</p>';
 
     try {
+        // Attempt to fetch orders
         const snapshot = await database.ref('orders').orderByChild('userId').equalTo(currentUser.uid).once('value');
         const ordersData = snapshot.val() || {};
         const orders = Object.keys(ordersData).map(id => ({ id, ...ordersData[id] }));
@@ -1173,18 +830,19 @@ async function renderUserOrders() {
                     <div class="order-body">
                         <p><strong>Total:</strong> ₹${order.total.toLocaleString('en-IN')}</p>
                         <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
-                        <ul>
-                            ${order.items.map(item => `<li>${item.title}</li>`).join('')}
-                        </ul>
+                        <ul>${order.items.map(item => `<li>${item.title}</li>`).join('')}</ul>
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         } else {
             ordersContainer.innerHTML = '<p class="empty-state">You have no orders yet.</p>';
         }
     } catch (error) {
+        // IMPROVED ERROR DISPLAY
         console.error("Error fetching user orders:", error);
-        ordersContainer.innerHTML = '<p class="error-message" style="display:block;">Could not load your orders.</p>';
+        ordersContainer.innerHTML = `<div class="error-message" style="display:block;">
+            <p>Could not load your orders.</p>
+            <small>Error: ${error.message || 'Unknown Firebase Error'}</small>
+        </div>`;
     }
 }
 
@@ -1208,41 +866,34 @@ async function renderAllOrders() {
                         <p><strong>User ID:</strong> ${order.userId}</p>
                         <p><strong>Total:</strong> ₹${order.total.toLocaleString('en-IN')}</p>
                         <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
-                        <ul>
-                            ${order.items.map(item => `<li>${item.title}</li>`).join('')}
-                        </ul>
+                        <ul>${order.items.map(item => `<li>${item.title}</li>`).join('')}</ul>
                     </div>
                     <div class="order-actions">
                         ${order.status === 'pending' ? `<button class="btn-primary" onclick="updateOrderStatus('${order.id}', 'completed')">Mark as Completed</button>` : ''}
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         } else {
             ordersContainer.innerHTML = '<p class="empty-state">No orders have been placed yet.</p>';
         }
     } catch (error) {
+        // IMPROVED ERROR DISPLAY
         console.error("Error fetching all orders:", error);
-        ordersContainer.innerHTML = '<p class="error-message" style="display:block;">Could not load orders.</p>';
+        ordersContainer.innerHTML = `<div class="error-message" style="display:block;">
+            <p>Could not load orders.</p>
+            <small>Error: ${error.message || 'Unknown Firebase Error'}</small>
+        </div>`;
     }
 }
 
 async function updateOrderStatus(orderId, newStatus) {
     try {
         await database.ref(`orders/${orderId}/status`).set(newStatus);
-        console.log(`Order ${orderId} status updated to ${newStatus}`);
         renderAllOrders();
-    } catch (error) {
-        console.error("Error updating order status:", error);
-        alert("There was an error updating the order status.");
-    }
+    } catch (error) { console.error("Error updating:", error); alert("Update failed."); }
 }
 
 function showPage(pageId) {
-    const pages = document.querySelectorAll('.page');
-    pages.forEach(page => {
-        page.classList.remove('active');
-    });
-
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const newPage = document.getElementById(`page-${pageId}`);
     if (newPage) {
         newPage.classList.add('active');
@@ -1250,40 +901,22 @@ function showPage(pageId) {
         window.scrollTo(0, 0);
 
         if (currentUser.isLoggedIn) {
-             switch (pageId) {
-                case 'developer-dashboard': 
-                    if (currentUser.role === 'admin') {
-                        renderAdminDashboard();
-                        renderAllOrders();
-                    }
-                    break;
-                case 'seller-dashboard': 
-                    if (currentUser.role === 'seller') renderSellerDashboard(); 
-                    break;
-                case 'user-dashboard': 
-                    if (currentUser.role === 'user') {
-                        renderUserDashboard();
-                        renderUserOrders();
-                    }
-                    break;
+            switch (pageId) {
+                case 'developer-dashboard': if (currentUser.role === 'admin') { renderAdminDashboard(); renderAllOrders(); } break;
+                case 'seller-dashboard': if (currentUser.role === 'seller') renderSellerDashboard(); break;
+                case 'user-dashboard': if (currentUser.role === 'user') { renderUserDashboard(); renderUserOrders(); } break;
             }
         }
-        if (pageId === 'cart') {
-            renderCartPage();
-        }
+        if (pageId === 'cart') renderCartPage();
     } else {
-        console.error(`Page with ID 'page-${pageId}' not found.`);
-        document.getElementById('page-home').classList.add('active');
-        currentPage = 'home';
+        document.getElementById('page-home').classList.add('active'); currentPage = 'home';
     }
     const nav = document.getElementById('main-nav');
-    const menuBtn = document.getElementById('mobile-menu-btn');
     if (nav.classList.contains('mobile-active')) {
         nav.classList.remove('mobile-active');
-        menuBtn.classList.remove('active');
+        document.getElementById('mobile-menu-btn').classList.remove('active');
         document.body.classList.remove('no-scroll');
     }
 }
 
-// Initialize cart on load
-console.log('app.js loaded and initialized.');
+console.log('app.js loaded (v2.3)');
