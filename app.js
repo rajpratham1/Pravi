@@ -1,5 +1,5 @@
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.7)
+// Pravi Marketplace - Rewritten Application Logic (v2.8)
 // ============================================================
 
 // ============================================================
@@ -431,7 +431,7 @@ async function renderAdminDashboard() {
             </div>`).join('');
     } else { listingsContainer.innerHTML = '<p class="empty-state">No listings found.</p>'; }
 
-    // Applications
+    // Applications (NOW INCLUDING BANK DETAILS)
     try {
         const snapshot = await database.ref('applications').orderByChild('status').equalTo('pending').once('value');
         const apps = snapshot.val();
@@ -439,16 +439,22 @@ async function renderAdminDashboard() {
             appsContainer.innerHTML = Object.keys(apps).map(appId => {
                 const app = apps[appId];
                 return `
-                    <div class="application-card">
+                    <div class="application-card" style="display: flex; flex-direction: column; gap: 10px;">
                         <div class="application-info">
-                            <h4>${app.name}</h4>
-                            <p>${app.email} | ${app.phone}</p>
+                            <h4 style="margin: 0;">${app.name}</h4>
+                            <p style="margin: 5px 0;"><strong>Contact:</strong> ${app.email} | ${app.phone}</p>
+                            
+                            <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 5px; margin-top: 5px;">
+                                <p style="margin: 2px 0;"><strong>Bank Account:</strong> ${app.bankAccount || 'N/A'}</p>
+                                <p style="margin: 2px 0;"><strong>IFSC Code:</strong> ${app.ifscCode || 'N/A'}</p>
+                                <p style="margin: 2px 0;"><strong>Account Holder:</strong> ${app.holderName || 'N/A'}</p>
+                            </div>
                         </div>
-                        <div class="application-docs">
-                            <a href="${app.aadhaarData}" target="_blank" class="document-link">View Aadhaar</a>
+                        <div class="application-docs" style="margin-top: 5px;">
+                            <a href="${app.aadhaarData}" target="_blank" class="document-link" style="margin-right: 10px;">View Aadhaar</a>
                             <a href="${app.panData}" target="_blank" class="document-link">View PAN</a>
                         </div>
-                        <div class="application-actions">
+                        <div class="application-actions" style="margin-top: 10px;">
                             <button class="btn-primary" onclick="approveApplication('${appId}', '${app.email}')">Approve</button>
                             <button class="btn-secondary" onclick="rejectApplication('${appId}')">Reject</button>
                         </div>
@@ -898,7 +904,7 @@ async function updateOrderStatus(orderId, newStatus) {
 }
 
 // ============================================================
-// FIX: CONTACT FORM - SEND TO FORMSPREE WITHOUT REDIRECT
+// CONTACT FORM - SEND TO FORMSPREE WITHOUT REDIRECT
 // ============================================================
 async function handleContactFormSubmit(event) {
     event.preventDefault(); // Stop page redirect
@@ -970,5 +976,5 @@ function showPage(pageId) {
     }
 }
 
-console.log('app.js loaded (v2.7)');
+console.log('app.js loaded (v2.8)');
 
