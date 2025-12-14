@@ -1,5 +1,5 @@
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.5)
+// Pravi Marketplace - Rewritten Application Logic (v2.6)
 // ============================================================
 
 // ============================================================
@@ -898,10 +898,10 @@ async function updateOrderStatus(orderId, newStatus) {
 }
 
 // ============================================================
-// NEW: FOOTER CONTACT FORM LOGIC
+// FIX: FOOTER CONTACT FORM LOGIC (CORRECTED)
 // ============================================================
 async function handleContactFormSubmit(event) {
-    event.preventDefault(); // Stop page reload/redirect (Server Change)
+    event.preventDefault(); // Stop page reload
     
     const emailEl = document.getElementById('contact-email');
     const messageEl = document.getElementById('contact-message');
@@ -920,7 +920,7 @@ async function handleContactFormSubmit(event) {
     errorMsg.style.display = 'none';
 
     try {
-        // Save to Firebase "server"
+        // Save to Firebase (Requires corrected rules)
         await database.ref('contact_messages').push({
             email: emailEl.value,
             message: messageEl.value,
@@ -933,7 +933,7 @@ async function handleContactFormSubmit(event) {
         successMsg.style.display = 'block';
         
     } catch (error) {
-        console.error("Contact Form Error:", error);
+        console.error("Contact Form Error:", error.code, error.message); // Details in Console
         errorMsg.textContent = "Error sending message. Please try again.";
         errorMsg.style.display = 'block';
     } finally {
@@ -969,5 +969,5 @@ function showPage(pageId) {
     }
 }
 
-console.log('app.js loaded (v2.5)');
+console.log('app.js loaded (v2.6)');
 
