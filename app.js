@@ -20,14 +20,19 @@ let currentUser = {
 // The 'firebaseConfig' object is loaded from 'firebase-config.js'
 // which should be generated during the Vercel build process.
 try {
-    // Check if firebaseConfig is defined and has the necessary properties.
-    if (typeof firebaseConfig === 'undefined' || !firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
-         throw new Error('Firebase configuration is missing or invalid. Check that environment variables are set correctly in Vercel.');
+    // 1. Check if the configuration file loaded at all.
+    if (typeof firebaseConfig === 'undefined') {
+        throw new Error('Critical Error: "firebase-config.js" failed to load. This usually means "generate-config.js" did not run during the build. Please check the console for 404 errors.');
     }
 
-    // Deeper validation for the databaseURL format, which is a common deployment issue.
-    if (typeof firebaseConfig.databaseURL !== 'string' || !firebaseConfig.databaseURL.startsWith('https://') || !firebaseConfig.databaseURL.endsWith('.firebaseio.com')) {
-        throw new Error(`Invalid Firebase databaseURL format. The provided URL was "${firebaseConfig.databaseURL}". It should be a full URL like "https://your-project-id.firebaseio.com". Please check the 'PUBLIC_FIREBASE_DATABASE_URL' environment variable in your Vercel project settings.`);
+    // 2. Check if the configuration has the required keys.
+    if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
+         throw new Error('Firebase configuration is empty. Please check that your Environment Variables (PUBLIC_FIREBASE_API_KEY, PUBLIC_FIREBASE_DATABASE_URL, etc.) are set correctly in Vercel Project Settings.');
+    }
+
+    // 3. Validate the databaseURL format (relaxed check).
+    if (typeof firebaseConfig.databaseURL !== 'string' || !firebaseConfig.databaseURL.startsWith('https://')) {
+        throw new Error(`Invalid Firebase databaseURL. It must start with "https://". Provided value: "${firebaseConfig.databaseURL}"`);
     }
 
     app = firebase.initializeApp(firebaseConfig);
