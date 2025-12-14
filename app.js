@@ -1,5 +1,5 @@
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.6)
+// Pravi Marketplace - Rewritten Application Logic (v2.7)
 // ============================================================
 
 // ============================================================
@@ -898,42 +898,43 @@ async function updateOrderStatus(orderId, newStatus) {
 }
 
 // ============================================================
-// FIX: FOOTER CONTACT FORM LOGIC (CORRECTED)
+// FIX: CONTACT FORM - SEND TO FORMSPREE WITHOUT REDIRECT
 // ============================================================
 async function handleContactFormSubmit(event) {
-    event.preventDefault(); // Stop page reload
+    event.preventDefault(); // Stop page redirect
     
-    const emailEl = document.getElementById('contact-email');
-    const messageEl = document.getElementById('contact-message');
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
     const successMsg = document.getElementById('contact-success-msg');
     const errorMsg = document.getElementById('contact-error-msg');
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-
-    if (!emailEl.value || !messageEl.value) {
-        alert("Please fill in all fields.");
-        return;
-    }
-
+    
+    // Disable button to prevent double-click
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
     successMsg.style.display = 'none';
     errorMsg.style.display = 'none';
 
     try {
-        // Save to Firebase (Requires corrected rules)
-        await database.ref('contact_messages').push({
-            email: emailEl.value,
-            message: messageEl.value,
-            createdAt: firebase.database.ServerValue.TIMESTAMP
+        // Use Fetch API to send data to Formspree silently
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: new FormData(form),
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
-        // Show Success Message
-        emailEl.value = '';
-        messageEl.value = '';
-        successMsg.style.display = 'block';
-        
+        if (response.ok) {
+            // SUCCESS!
+            form.reset(); // Clear the form
+            successMsg.style.display = 'block'; // Show green success message
+        } else {
+            // ERROR from Formspree
+            const data = await response.json();
+            throw new Error(data.error || 'Form submission failed');
+        }
     } catch (error) {
-        console.error("Contact Form Error:", error.code, error.message); // Details in Console
+        console.error("Contact Form Error:", error);
         errorMsg.textContent = "Error sending message. Please try again.";
         errorMsg.style.display = 'block';
     } finally {
@@ -969,5 +970,5 @@ function showPage(pageId) {
     }
 }
 
-console.log('app.js loaded (v2.6)');
+console.log('app.js loaded (v2.7)');
 
