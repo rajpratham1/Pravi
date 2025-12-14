@@ -1,6 +1,5 @@
-
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.3)
+// Pravi Marketplace - Rewritten Application Logic (v2.4)
 // ============================================================
 
 // ============================================================
@@ -16,7 +15,6 @@ let currentUser = {
     name: null
 };
 
-// The 'firebaseConfig' object is loaded from 'firebase-config.js'
 try {
     if (typeof firebaseConfig === 'undefined') {
         throw new Error('Critical Error: "firebase-config.js" failed to load.');
@@ -535,9 +533,12 @@ async function deleteListing(listingId) {
     }
 }
 
+// ============================================================
+// FIX: USER DASHBOARD INQUIRIES
+// ============================================================
 async function renderUserDashboard() {
     const inquiriesContainer = document.getElementById('user-inquiries');
-    inquiriesContainer.innerHTML = '<p class="loading">Loading...</p>';
+    inquiriesContainer.innerHTML = '<p class="loading">Loading inquiries...</p>';
     try {
         const inquiriesSnapshot = await database.ref('inquiries').orderByChild('buyerId').equalTo(currentUser.uid).once('value');
         const inquiriesData = inquiriesSnapshot.val() || {};
@@ -553,7 +554,12 @@ async function renderUserDashboard() {
                 </div>`).join('');
         } else { inquiriesContainer.innerHTML = '<p class="empty-state">No inquiries sent.</p>'; }
     } catch (error) {
-        inquiriesContainer.innerHTML = '<p class="error-message">Could not load inquiries.</p>';
+        // ERROR HANDLING ADDED
+        console.error("Inquiries Error:", error);
+        inquiriesContainer.innerHTML = `<div class="error-message" style="display:block;">
+            <p>Could not load inquiries.</p>
+            <small>Error: ${error.message || 'Unknown Firebase Error'}</small>
+        </div>`;
     }
 }
 
@@ -807,15 +813,11 @@ document.getElementById('apply-coupon-btn')?.addEventListener('click', () => {
     updateCheckoutSummary();
 });
 
-// ============================================================
-// FIX: ORDER RENDERING WITH ERROR REPORTING
-// ============================================================
 async function renderUserOrders() {
     const ordersContainer = document.getElementById('user-orders');
     ordersContainer.innerHTML = '<p class="loading">Loading your orders...</p>';
 
     try {
-        // Attempt to fetch orders
         const snapshot = await database.ref('orders').orderByChild('userId').equalTo(currentUser.uid).once('value');
         const ordersData = snapshot.val() || {};
         const orders = Object.keys(ordersData).map(id => ({ id, ...ordersData[id] }));
@@ -837,7 +839,6 @@ async function renderUserOrders() {
             ordersContainer.innerHTML = '<p class="empty-state">You have no orders yet.</p>';
         }
     } catch (error) {
-        // IMPROVED ERROR DISPLAY
         console.error("Error fetching user orders:", error);
         ordersContainer.innerHTML = `<div class="error-message" style="display:block;">
             <p>Could not load your orders.</p>
@@ -876,7 +877,6 @@ async function renderAllOrders() {
             ordersContainer.innerHTML = '<p class="empty-state">No orders have been placed yet.</p>';
         }
     } catch (error) {
-        // IMPROVED ERROR DISPLAY
         console.error("Error fetching all orders:", error);
         ordersContainer.innerHTML = `<div class="error-message" style="display:block;">
             <p>Could not load orders.</p>
@@ -919,4 +919,5 @@ function showPage(pageId) {
     }
 }
 
-console.log('app.js loaded (v2.3)');
+console.log('app.js loaded (v2.4)');
+
