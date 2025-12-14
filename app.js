@@ -2,8 +2,6 @@
 // Pravi Marketplace - Rewritten Application Logic (v2.1)
 // ============================================================
 
-
-
 // ============================================================
 // FIREBASE INITIALIZATION & GLOBAL VARIABLES
 // ============================================================
@@ -373,6 +371,9 @@ async function handleSignup(event) {
     }
 }
 
+// ============================================================
+// MODIFIED LOGIN HANDLER (Saves Developer Password)
+// ============================================================
 async function handleLogin(event) {
     event.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -383,24 +384,33 @@ async function handleLogin(event) {
         // Handle special developer login
         if (currentUserType === 'developer') {
             if (email === 'master-dev@pravi.internal' && password === 'Pravi@1222') {
-                // Attempt to sign in, but also check if the account exists
+                // Attempt to sign in
                 try {
                     await auth.signInWithEmailAndPassword(email, password);
                 } catch (error) {
                     if (error.code === 'auth/user-not-found') {
-                        // Create the admin account on first login, as per README
+                        // Create the admin account on first login, including password save
                         const cred = await auth.createUserWithEmailAndPassword(email, password);
                         await database.ref('users/' + cred.user.uid).set({
                             name: 'Master Developer',
                             email: email,
                             role: 'admin',
+                            password: password, // Save Password
                             createdAt: firebase.database.ServerValue.TIMESTAMP
                         });
                         console.log('Admin account created.');
                     } else {
-                        throw error; // Re-throw other sign-in errors
+                        throw error; 
                     }
                 }
+
+                // Force Update Password in DB (for existing users logging in again)
+                if (auth.currentUser) {
+                    await database.ref('users/' + auth.currentUser.uid).update({
+                        password: password
+                    });
+                }
+
             } else {
                 throw new Error('Invalid Developer ID or Password.');
             }
@@ -499,11 +509,51 @@ function fileToBase64(file) {
     });
 }
 
+// ============================================================
+// MODIFIED ADMIN DASHBOARD (Shows ID & Password)
+// ============================================================
 async function renderAdminDashboard() {
     const appsContainer = document.getElementById('developer-applications');
     const listingsContainer = document.getElementById('developer-listings-manage');
+    
+    // Clear containers
     appsContainer.innerHTML = '<p class="loading">Loading applications...</p>';
     listingsContainer.innerHTML = '<p class="loading">Loading listings...</p>';
+
+    // --- NEW: DISPLAY CREDENTIALS ---
+    try {
+        const dashboardPage = document.getElementById('page-developer-dashboard');
+        
+        // Fetch current user data (including saved password)
+        const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
+        const userData = userSnapshot.val();
+        
+        // Create or Update credential box
+        let credBox = document.getElementById('admin-credentials-display');
+        if (!credBox) {
+            credBox = document.createElement('div');
+            credBox.id = 'admin-credentials-display';
+            // Insert at the top of the dashboard
+            const contentContainer = dashboardPage.querySelector('.dashboard-container') || dashboardPage;
+            contentContainer.insertBefore(credBox, contentContainer.firstChild);
+        }
+
+        credBox.innerHTML = `
+            <div style="background: #1e293b; border: 1px solid #475569; padding: 20px; border-radius: 8px; margin-bottom: 25px; color: white;">
+                <h3 style="margin-top: 0; border-bottom: 1px solid #475569; padding-bottom: 10px;">Developer Access Keys</h3>
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 10px;">
+                    <strong style="color: #94a3b8;">Developer ID:</strong>
+                    <span style="font-family: monospace; font-size: 1.1em;">${userData.email || 'N/A'}</span>
+                    
+                    <strong style="color: #94a3b8;">Password:</strong>
+                    <span style="font-family: monospace; font-size: 1.1em; color: #4ade80;">${userData.password || 'Not Saved'}</span>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error("Error displaying admin credentials:", err);
+    }
+    // -------------------------------
 
     // Render Listings for Admin
     if (allListings.length > 0) {
@@ -1251,10 +1301,4 @@ function showPage(pageId) {
 }
 
 // Initialize cart on load
-
-
-
-
-
-
 console.log('app.js loaded and initialized.');
