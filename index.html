@@ -60,8 +60,6 @@
                 </div>
             </section>
 
-
-
             <section class="how-it-works">
                 <div class="container">
                     <h2 class="section-title">How It Works</h2>
@@ -96,7 +94,6 @@
                     </div>
                 </div>
             </section>
-
         </div>
 
         <div id="page-listings" class="page">
@@ -412,17 +409,19 @@
                 <h2>Contact Us</h2>
                 <div class="contact-content">
                     <p>For questions or support, please reach out. (This is a demo form).</p>
-                    <form id="footer-contact-form">
+                    
+                    <form id="footer-contact-form" action="https://formspree.io/f/mpwreabr" method="POST">
                         <div class="form-group">
                              <label>Your Email</label>
-                             <input type="email" id="contact-email" required placeholder="Your Email">
+                             <input type="email" name="email" id="contact-email" required placeholder="Your Email">
                         </div>
                         <div class="form-group">
                              <label>Message</label>
-                             <textarea id="contact-message" required rows="5" placeholder="Your Message"></textarea>
+                             <textarea name="message" id="contact-message" required rows="5" placeholder="Your Message"></textarea>
                         </div>
                         <button type="submit" class="btn-primary">Send Message</button>
                     </form>
+                    
                     <p id="contact-success-msg" style="display:none; color: #4ade80; margin-top: 10px; font-weight: bold;">
                         Success we try to back you as soon as possible
                     </p>
