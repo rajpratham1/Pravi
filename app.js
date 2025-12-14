@@ -1,5 +1,5 @@
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.8)
+// Pravi Marketplace - Rewritten Application Logic (v2.9)
 // ============================================================
 
 // ============================================================
@@ -330,29 +330,47 @@ function logout() {
     auth.signOut().then(() => showPage('home'));
 }
 
+// ============================================================
+// SELLER APPLICATION (With Formspree Notification)
+// ============================================================
 async function handleSellerApplication(event) {
     event.preventDefault();
-    if (!currentUser.isLoggedIn) { showError('apply-error', 'You must be logged in.'); return; }
+    if (!currentUser.isLoggedIn) {
+        showError('apply-error', 'You must be logged in to apply.');
+        return;
+    }
 
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true; submitBtn.textContent = 'Submitting...';
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
     showError('apply-error', '');
+    document.getElementById('apply-success').textContent = '';
 
     try {
+        const name = document.getElementById('apply-name').value;
         const email = document.getElementById('apply-email').value;
+        
+        // 1. Check for duplicates in Firebase
         const emailCheck = await database.ref(`applicantEmails/${btoa(email)}`).once('value');
-        if (emailCheck.exists()) throw new Error('Application already exists.');
+        if (emailCheck.exists()) {
+            throw new Error('An application with this email already exists.');
+        }
 
         const aadhaarFile = document.getElementById('apply-aadhaar').files[0];
         const panFile = document.getElementById('apply-pan').files[0];
-        if (!aadhaarFile || !panFile) throw new Error('Files required.');
 
+        if (!aadhaarFile || !panFile) {
+            throw new Error('Both Aadhaar and PAN card files are required.');
+        }
+
+        // 2. Convert files
         const aadhaarData = await fileToBase64(aadhaarFile);
         const panData = await fileToBase64(panFile);
 
-        await database.ref('applications').push({
+        const application = {
             applicantId: currentUser.uid,
-            name: document.getElementById('apply-name').value,
+            name: name,
             email: email,
             phone: document.getElementById('apply-phone').value,
             bankAccount: document.getElementById('apply-bank-account').value,
@@ -362,14 +380,41 @@ async function handleSellerApplication(event) {
             panData: panData,
             status: 'pending',
             appliedAt: firebase.database.ServerValue.TIMESTAMP
-        });
+        };
+
+        // 3. Save to Firebase
+        const newAppRef = database.ref('applications').push();
+        await newAppRef.set(application);
         await database.ref(`applicantEmails/${btoa(email)}`).set(true);
-        document.getElementById('apply-success').textContent = 'Application submitted successfully!';
-        event.target.reset();
+
+        // 4. NEW: Send Notification via Formspree (Background)
+        const notifyCheckbox = document.getElementById('notify-developer');
+        if (notifyCheckbox && notifyCheckbox.checked) {
+            try {
+                const formData = new FormData();
+                formData.append('email', email); // The applicant's email
+                formData.append('message', `New Seller Application Received!\n\nName: ${name}\nPhone: ${application.phone}\n\nPlease check the Developer Dashboard to review documents.`);
+                
+                // Sending silently - we don't wait for this to finish to show success
+                fetch('https://formspree.io/f/mpwreabr', { 
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                }).then(response => console.log('Admin notification sent.'));
+            } catch (err) {
+                console.log('Notification failed, but application saved.');
+            }
+        }
+
+        document.getElementById('apply-success').textContent = 'Application submitted successfully! You will be notified upon approval.';
+        form.reset();
+
     } catch (error) {
+        console.error('Seller Application Error:', error);
         showError('apply-error', error.message);
     } finally {
-        submitBtn.disabled = false; submitBtn.textContent = 'Submit Application';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Application';
     }
 }
 
@@ -904,7 +949,7 @@ async function updateOrderStatus(orderId, newStatus) {
 }
 
 // ============================================================
-// CONTACT FORM - SEND TO FORMSPREE WITHOUT REDIRECT
+// FIX: CONTACT FORM - SEND TO FORMSPREE WITHOUT REDIRECT
 // ============================================================
 async function handleContactFormSubmit(event) {
     event.preventDefault(); // Stop page redirect
@@ -976,5 +1021,5 @@ function showPage(pageId) {
     }
 }
 
-console.log('app.js loaded (v2.8)');
+console.log('app.js loaded (v2.9)');
 
