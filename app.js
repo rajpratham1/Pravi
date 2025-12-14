@@ -1,5 +1,6 @@
+
 // ============================================================
-// Pravi Marketplace - Rewritten Application Logic (v2.1)
+// Pravi Marketplace - Rewritten Application Logic (v2.2)
 // ============================================================
 
 // ============================================================
@@ -372,7 +373,7 @@ async function handleSignup(event) {
 }
 
 // ============================================================
-// MODIFIED LOGIN HANDLER (Saves Developer Password)
+// LOGIN HANDLER (Secure: No Hardcoded Credentials)
 // ============================================================
 async function handleLogin(event) {
     event.preventDefault();
@@ -381,45 +382,29 @@ async function handleLogin(event) {
     showError('login-error', '');
 
     try {
-        // Handle special developer login
+        // 1. Authenticate with Firebase (Checks against the DB/Auth automatically)
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // 2. Extra Security Check for Developers
         if (currentUserType === 'developer') {
-            if (email === 'master-dev@pravi.internal' && password === 'Pravi@1222') {
-                // Attempt to sign in
-                try {
-                    await auth.signInWithEmailAndPassword(email, password);
-                } catch (error) {
-                    if (error.code === 'auth/user-not-found') {
-                        // Create the admin account on first login, including password save
-                        const cred = await auth.createUserWithEmailAndPassword(email, password);
-                        await database.ref('users/' + cred.user.uid).set({
-                            name: 'Master Developer',
-                            email: email,
-                            role: 'admin',
-                            password: password, // Save Password
-                            createdAt: firebase.database.ServerValue.TIMESTAMP
-                        });
-                        console.log('Admin account created.');
-                    } else {
-                        throw error; 
-                    }
-                }
+            const snapshot = await database.ref('users/' + user.uid).once('value');
+            const userData = snapshot.val();
 
-                // Force Update Password in DB (for existing users logging in again)
-                if (auth.currentUser) {
-                    await database.ref('users/' + auth.currentUser.uid).update({
-                        password: password
-                    });
-                }
-
-            } else {
-                throw new Error('Invalid Developer ID or Password.');
+            if (!userData || userData.role !== 'admin') {
+                // User logged in, but is NOT an admin. Kick them out.
+                await auth.signOut();
+                throw new Error('Access Denied: You do not have Developer permissions.');
             }
-        } else {
-            // Regular user/seller login
-            await auth.signInWithEmailAndPassword(email, password);
+
+            // 3. Update the saved password in DB (so it shows on your dashboard)
+            // This ensures if you change your password, the dashboard updates too.
+            await database.ref('users/' + user.uid).update({
+                password: password
+            });
         }
 
-        // Auth state listener will handle UI changes and redirection
+        // Login successful - Auth listener handles redirection
         console.log('Login successful');
 
     } catch (error) {
@@ -510,7 +495,7 @@ function fileToBase64(file) {
 }
 
 // ============================================================
-// MODIFIED ADMIN DASHBOARD (Shows ID & Password)
+// ADMIN DASHBOARD (Shows ID & Password fetched from DB)
 // ============================================================
 async function renderAdminDashboard() {
     const appsContainer = document.getElementById('developer-applications');
@@ -520,7 +505,7 @@ async function renderAdminDashboard() {
     appsContainer.innerHTML = '<p class="loading">Loading applications...</p>';
     listingsContainer.innerHTML = '<p class="loading">Loading listings...</p>';
 
-    // --- NEW: DISPLAY CREDENTIALS ---
+    // --- DISPLAY CREDENTIALS FROM DB ---
     try {
         const dashboardPage = document.getElementById('page-developer-dashboard');
         
