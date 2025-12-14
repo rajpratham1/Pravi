@@ -920,6 +920,46 @@ function showListingDetail(listingId) {
     showPage('listing-detail');
 }
 
+async function handleInquiry(event, listingId, sellerId) {
+    event.preventDefault();
+    if (!currentUser.isLoggedIn) {
+        alert("You must be logged in to send an inquiry.");
+        return;
+    }
+
+    const message = document.getElementById('inquiry-message').value;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const errorEl = document.getElementById('inquiry-error');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    errorEl.textContent = '';
+
+    try {
+        const listing = allListings.find(l => l.id === listingId);
+        const inquiry = {
+            listingId: listingId,
+            listingTitle: listing ? listing.title : 'Unknown Listing',
+            sellerId: sellerId,
+            buyerId: currentUser.uid,
+            buyerName: currentUser.name,
+            buyerEmail: currentUser.email,
+            message: message,
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        await database.ref('inquiries').push(inquiry);
+        alert('Inquiry sent successfully!');
+        document.getElementById('inquiry-message').value = '';
+    } catch (error) {
+        console.error("Error sending inquiry:", error);
+        errorEl.textContent = "Failed to send inquiry. Please try again.";
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Inquiry';
+    }
+}
+
 
 function renderCartPage() {
     const container = document.getElementById('cart-items-container');
