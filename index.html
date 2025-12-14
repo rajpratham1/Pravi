@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Header -->
     <header id="main-header">
         <div class="container">
             <div class="header-content">
@@ -48,9 +47,7 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main id="main-content">
-        <!-- Home Page -->
         <div id="page-home" class="page active">
             <section class="hero">
                 <div class="container">
@@ -102,7 +99,6 @@
 
         </div>
 
-        <!-- Listings Page -->
         <div id="page-listings" class="page">
             <div class="container">
                 <div class="page-header">
@@ -122,21 +118,18 @@
             </div>
         </div>
 
-        <!-- Listing Detail Page -->
         <div id="page-listing-detail" class="page">
             <div class="container" id="listing-detail-content">
                 <p class="loading">Loading listing details...</p>
             </div>
         </div>
 
-        <!-- Cart Page -->
         <div id="page-cart" class="page">
             <div class="container">
                 <div class="page-header">
                     <h2>My Cart</h2>
                 </div>
                 <div id="cart-items-container">
-                    <!-- Cart items will be rendered here by JS -->
                     <p class="loading">Your cart is empty.</p>
                 </div>
                 <div class="cart-summary">
@@ -151,7 +144,6 @@
             </div>
         </div>
 
-        <!-- Login Page -->
         <div id="page-login" class="page">
             <div class="container">
                 <div class="auth-form">
@@ -178,7 +170,6 @@
             </div>
         </div>
 
-        <!-- Signup Page -->
         <div id="page-signup" class="page">
             <div class="container">
                 <div class="auth-form">
@@ -201,7 +192,6 @@
             </div>
         </div>
 
-        <!-- Seller Application Page -->
         <div id="page-seller-apply" class="page">
             <div class="container">
                 <div class="auth-form">
@@ -224,7 +214,6 @@
             </div>
         </div>
 
-        <!-- User (Buyer) Dashboard -->
         <div id="page-user-dashboard" class="page">
             <div class="container">
                 <h2>My Dashboard</h2>
@@ -237,7 +226,6 @@
             </div>
         </div>
 
-        <!-- Seller Dashboard -->
         <div id="page-seller-dashboard" class="page">
             <div class="container">
                 <h2>Seller Dashboard</h2>
@@ -269,7 +257,6 @@
             </div>
         </div>
 
-        <!-- Developer (Admin) Dashboard -->
         <div id="page-developer-dashboard" class="page">
             <div class="container">
                 <h2>Developer Dashboard (Admin)</h2>
@@ -288,7 +275,6 @@
             </div>
         </div>
 
-        <!-- Testimonials Page -->
         <div id="page-testimonials" class="page">
             <div class="container">
                 <div class="page-header">
@@ -321,7 +307,6 @@
             </div>
         </div>
 
-        <!-- Checkout Page -->
         <div id="page-checkout" class="page">
             <div class="container">
                 <div class="page-header">
@@ -329,8 +314,7 @@
                 </div>
                 <div class="checkout-layout">
                     <div id="checkout-item-summary">
-                        <!-- Item summary will be rendered here by JS -->
-                    </div>
+                        </div>
                     <div class="checkout-details">
                         <h3>Order Summary</h3>
                         <div class="price-details">
@@ -367,7 +351,6 @@
             </div>
         </div>
 
-        <!-- User Manual Page -->
         <div id="page-user-manual" class="page">
             <div class="container">
                 <div class="page-header">
@@ -400,7 +383,6 @@
             </div>
         </div>
 
-        <!-- Terms & Privacy Page -->
         <div id="page-terms" class="page">
             <div class="container">
                 <h2>Terms & Conditions and Privacy Policy</h2>
@@ -425,18 +407,26 @@
             </div>
         </div>
 
-        <!-- Contact Page -->
         <div id="page-contact" class="page">
             <div class="container">
                 <h2>Contact Us</h2>
                 <div class="contact-content">
                     <p>For questions or support, please reach out. (This is a demo form).</p>
-                    <form id="contact-form" action="https://formspree.io/f/mpwreabr" method="POST">
-                        <div class="form-group"><label>Your Name</label><input type="text" name="name" required></div>
-                        <div class="form-group"><label>Your Email</label><input type="email" name="email" required></div>
-                        <div class="form-group"><label>Message</label><textarea name="message" required rows="5"></textarea></div>
+                    <form id="footer-contact-form">
+                        <div class="form-group">
+                             <label>Your Email</label>
+                             <input type="email" id="contact-email" required placeholder="Your Email">
+                        </div>
+                        <div class="form-group">
+                             <label>Message</label>
+                             <textarea id="contact-message" required rows="5" placeholder="Your Message"></textarea>
+                        </div>
                         <button type="submit" class="btn-primary">Send Message</button>
                     </form>
+                    <p id="contact-success-msg" style="display:none; color: #4ade80; margin-top: 10px; font-weight: bold;">
+                        Success we try to back you as soon as possible
+                    </p>
+                    <p id="contact-error-msg" style="display:none; color: #ef4444; margin-top: 10px;"></p>
                 </div>
 
                 <div class="faq-section">
@@ -493,7 +483,6 @@
         </div>
     </main>
 
-    <!-- Footer -->
     <footer id="main-footer">
         <div class="container">
             <div class="footer-content">
@@ -526,16 +515,14 @@
         </div>
     </footer>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-    <!-- Firebase Config -->
     <script src="firebase-config.js"></script>
 
-    <!-- App Script -->
     <script src="app.js"></script>
 </body>
 </html>
+
