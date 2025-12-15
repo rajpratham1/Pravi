@@ -1,5 +1,6 @@
 {
   "rules": {
+    // 1. Users (Your working code)
     "users": {
       ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".indexOn": ["role"],
@@ -9,31 +10,35 @@
         ".validate": "newData.hasChildren(['role', 'email', 'createdAt'])"
       }
     },
+
+    // 2. Approved Emails (Your working code)
     "approvedEmails": {
       ".read": true,
       ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
     },
+
+    // 3. Applicant Emails (Your working code - This fixes the permission error!)
     "applicantEmails": {
       ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$email": {
-          // Allow anyone to check for the existence of a specific email.
+          // Allow checking existence of specific email
           ".read": true,
-          // Allow an unauthenticated user to add an email if it doesn't exist yet.
+          // Allow creating if it doesn't exist
           ".write": "!data.exists() && auth != null"
       }
     },
+
+    // 4. Applications (Your working code)
     "applications": {
-      // Admins can read the list.
       ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
-      // Logged-in users can attempt to write.
       ".write": "auth != null",
       ".indexOn": ["status"],
       "$applicationId": {
-        // When creating a new application (!data.exists()), the applicant must be the one writing it, and status must be 'pending'.
-        // When updating an existing application (data.exists()), the user must be an admin.
         ".validate": "newData.hasChildren(['applicantId', 'name', 'email', 'phone', 'bankAccount', 'ifscCode', 'holderName', 'aadhaarData', 'panData', 'status', 'appliedAt']) && ( (!data.exists() && newData.child('applicantId').val() === auth.uid && newData.child('status').val() === 'pending') || (data.exists() && root.child('users').child(auth.uid).child('role').val() === 'admin') )"
       }
     },
+
+    // 5. Listings (Your working code)
     "listings": {
       ".read": true,
       ".indexOn": ["userId", "createdAt"],
@@ -42,19 +47,25 @@
         ".validate": "newData.hasChildren(['title', 'description', 'price', 'websiteURL', 'userId', 'createdAt'])"
       }
     },
+
+    // 6. Inquiries (Updated ONLY to allow Dashboard searching)
     "inquiries": {
-      ".read": "auth != null",
       ".indexOn": ["buyerId", "sellerId"],
+      // Allow Admin OR Users searching for their own inquiries
+      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin' || (query.orderByChild == 'buyerId' && query.equalTo == auth.uid) || (query.orderByChild == 'sellerId' && query.equalTo == auth.uid)",
       "$inquiryId": {
         ".read": "data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
         ".write": "auth != null && newData.child('buyerId').val() === auth.uid",
         ".validate": "newData.hasChildren(['listingId', 'listingTitle', 'sellerId', 'buyerId', 'message', 'createdAt'])"
       }
     },
+
+    // 7. Orders (Updated ONLY to allow Dashboard searching)
     "orders": {
-      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
-      ".write": "auth != null",
       ".indexOn": ["userId"],
+      // Allow Admin OR Users searching for their own orders
+      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin' || (query.orderByChild == 'userId' && query.equalTo == auth.uid)",
+      ".write": "auth != null",
       "$orderId": {
         ".read": "data.child('userId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
         ".write": "(!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && root.child('users').child(auth.uid).child('role').val() === 'admin')",
@@ -63,3 +74,4 @@
     }
   }
 }
+
